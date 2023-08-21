@@ -296,17 +296,49 @@ import webhookHandler from 'next-stripe-helper';
 Then, set up an API route in Next.js to handle the Stripe webhook:
 
 ```javascript
-// pages/api/stripe-webhook.js
+// pages/api/stripe/webhook/route.js
 
-const handler = webhookHandler(
-    upsertProductFunction,
-    upsertPriceFunction,
-    manageSubscriptionChangeFunction
-);
+import { webhookHandler } from 'stripe-next-helper'; 
 
-export default async (req, res) => {
-    await handler(req, res);
+// Import or define upsertProduct, upsertPrice, and manageSubscriptionChange here. These are functions you create to handle the Database updates.
+
+// Ensure you have error handling and necessary functions.
+export async function POST(req) {
+  try {
+    // Validate if the request is legitimate (e.g., you might want to check if there's a user session, but for a stripe webhook, it might not be necessary.)
+
+    const handleWebhook = webhookHandler(
+      async (product) => {
+        // upsertProduct logic here
+      },
+      async (price) => {
+        // upsertPrice logic here
+      },
+      async (subscriptionId, customerId, isNew) => {
+        // manageSubscriptionChange logic here
+      }
+    );
+
+    // Call the handler with the adapted request/response format
+    const response = await handleWebhook(req, {
+      status: (statusCode) => ({ statusCode }),
+      json: (body) => new Response(JSON.stringify(body)),
+      setHeader: (name, value) => {}, // You can extend this if needed
+      end: (text) => new Response(text)
+    });
+
+    return response;
+
+  } catch (error) {
+    // Handle your errors. If it's a validation error, return a 422 status. Otherwise, return a 500 status.
+    if (/* it's a validation error */) {
+      return new Response(JSON.stringify(/* error details */), { status: 422 });
+    }
+
+    return new Response(null, { status: 500 });
+  }
 }
+
 ```
 
 ## Sync with Stripe
