@@ -1,0 +1,15 @@
+{
+  "name": "next-stripe-helper",
+  "version": "1.0.0",
+  "description": "Easily add Stripe boilerplate code to Nextjs, like webhook handling.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "J Hanlon",
+  "license": "ISC",
+  "dependencies": {
+    "micro": "^10.0.1",
+    "stripe": "^13.2.0"
+  }
+}
