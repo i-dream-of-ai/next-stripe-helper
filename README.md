@@ -309,6 +309,43 @@ export default async (req, res) => {
 }
 ```
 
+## Sync with Stripe
+
+## Syncing Stripe Products with Your Local Database
+
+To ensure that your local database reflects your current Stripe products, you can utilize the provided syncing utility. First create DB functions, then use them with the syncWithStripe function in an api endpoint. You can then create a simple button in your app that triggers the sync function.
+
+### Integration Steps:
+
+1. **Add the Syncing Endpoint**:
+
+Set up an API route in your Next.js project that uses the sync utility:
+
+```javascript
+// pages/api/syncStripe.js
+import { syncWithStripe } from 'next-stripe-helper';
+
+const dbOperations = {
+    getAllLocalProducts: async () => { /* fetch all products from the DB */ },
+    addProduct: async (product) => { /* add new product to the DB */ },
+    updateProduct: async (product) => { /* update existing product in the DB */ },
+};
+
+export default async (req, res) => {
+    if (req.method === 'POST') {
+        const result = await syncWithStripe(dbOperations);
+
+        if (result.success) {
+            res.status(200).json({ message: result.message });
+        } else {
+            res.status(500).json({ error: result.error, details: result.details });
+        }
+    } else {
+        res.status(405).end(); // Method Not Allowed
+    }
+};
+```
+
 ### Configuration
 
 1. **Environment Variables**: Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). With Next.js, you can access these environment variables using `process.env`.

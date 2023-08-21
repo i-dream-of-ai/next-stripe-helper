@@ -2,6 +2,10 @@ import { stripe, handleStripeError } from "../utils/stripe";
 
 /**
  * Create a new Stripe customer.
+ * 
+ * @param {string} email - The email address of the customer.
+ * @returns {object} - The created customer object from Stripe.
+ * @throws {Error} - Throws an error if the Stripe API call fails.
  */
 async function createCustomer(email) {
     try {
@@ -12,7 +16,11 @@ async function createCustomer(email) {
 }
 
 /**
- * Retrieve customer details.
+ * Retrieve customer details from Stripe.
+ * 
+ * @param {string} customerId - The ID of the customer in Stripe.
+ * @returns {object} - The customer object from Stripe.
+ * @throws {Error} - Throws an error if the Stripe API call fails.
  */
 async function getCustomer(customerId) {
     try {
@@ -23,10 +31,14 @@ async function getCustomer(customerId) {
 }
 
 /**
- * Update a customer's details.
+ * Update a customer's details in Stripe.
+ * 
+ * @param {string} customerId - The ID of the customer in Stripe.
+ * @param {object} updates - An object containing fields to update for the customer.
+ * @returns {object} - The updated customer object from Stripe.
+ * @throws {Error} - Throws an error if the Stripe API call fails.
  */
 async function updateCustomer(customerId, updates) {
-    
     try {
         return await stripe.customers.update(customerId, updates);
     } catch (error) {

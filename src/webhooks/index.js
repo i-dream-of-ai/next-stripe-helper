@@ -1,6 +1,14 @@
 import { stripe } from '../utils/stripe';
 import { buffer } from 'micro';
 
+/**
+ * A handler function for Stripe webhooks, performing operations based on webhook event types.
+ *
+ * @param {function} upsertProduct - Function to handle product creation or update.
+ * @param {function} upsertPrice - Function to handle price creation or update.
+ * @param {function} manageSubscriptionChange - Function to handle changes in customer subscription.
+ * @returns {function} An asynchronous function that handles the HTTP request and response.
+ */
 const webhookHandler = (upsertProduct, upsertPrice, manageSubscriptionChange) => async (req, res) => {
     try {
         if (req.method === 'POST') {
