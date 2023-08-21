@@ -290,7 +290,7 @@ In the Next.js environment, API routes provide a solution to build your backend 
 First, you'll need to import the webhook handler into your API route:
 
 ```javascript
-import webhookHandler from 'next-stripe-helper';
+import { webhookHandler } from 'stripe-next-helper'; 
 ```
 
 Then, set up an API route in Next.js to handle the Stripe webhook:
