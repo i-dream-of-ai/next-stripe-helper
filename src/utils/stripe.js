@@ -1,7 +1,9 @@
 import Stripe from 'stripe';
 
+const stripeSecret = process.env.STRIPE_SECRET_LIVE ?? process.env.STRIPE_SECRET;
+
 // 1. Initialize Stripe SDK
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(stripeSecret);
 
 function handleStripeError(error) {
     switch (error.type) {
