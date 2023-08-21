@@ -21,6 +21,17 @@ Ensure you have set the `STRIPE_SECRET_LIVE` or `STRIPE_SECRET` environment vari
 
 Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). With Next.js, you can access these environment variables using `process.env`.
 
+``` dotenv
+
+# Stripe configuration
+STRIPE_SECRET=your_stripe_TEST_secret_key
+STRIPE_WEBHOOK_SECRET=your_TEST_stripe_webhook_secret
+
+STRIPE_SECRET_LIVE=your_LIVE_stripe_secret_key
+STRIPE_WEBHOOK_SECRET_LIVE=your_LIVE_stripe_webhook_secret
+
+```
+
 Make sure you complete your checkout settings from within the Stripe dashboard before using any checkout functions. [Checkout Settings](https://dashboard.stripe.com/settings/checkout)
 
 Make sure you add your webhooks endpoint URL!! [Setup Webhook URL](https://dashboard.stripe.com/webhooks)
