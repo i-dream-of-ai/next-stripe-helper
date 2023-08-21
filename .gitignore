@@ -3,3 +3,5 @@ npm-debug.log
 *.log
 *.swp
 *.DS_Store
+
+package-lock.json
