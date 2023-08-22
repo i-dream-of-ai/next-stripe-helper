@@ -73,6 +73,32 @@ export const webhookHandler = async (
                             true
                         );
                     }
+                    if (checkoutSession.mode === 'setup') {
+                        try {
+                            // Retrieve the setup intent
+                            const setupIntent = await stripe.setupIntents.retrieve(
+                                checkoutSession.setup_intent as string
+                            );
+                
+                            if (setupIntent.payment_method) {
+                                // Assuming payment_method is either a string or a PaymentMethod object,
+                                // we check its type and handle accordingly.
+                                const paymentMethodId = typeof setupIntent.payment_method === 'string' 
+                                    ? setupIntent.payment_method 
+                                    : setupIntent.payment_method.id;
+                            
+                                // Set the payment method as the default for the customer
+                                await stripe.customers.update(checkoutSession.customer as string, {
+                                    invoice_settings: {
+                                        default_payment_method: paymentMethodId,
+                                    },
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Failed to update customer's default payment method:", error);
+                            throw new Error('Failed to set default payment method.');
+                        }
+                    }
                     break;
                 default:
                     throw new Error('Unhandled relevant event!');
