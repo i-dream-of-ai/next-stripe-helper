@@ -1,7 +1,7 @@
 {
   "name": "next-stripe-helper",
-  "version": "1.0.3",
-  "description": "Easily add Stripe boilerplate code to Nextjs, like webhook handling, and subscription updates. This package provides a think wrapper around the Stripe API.",
+  "version": "1.0.4",
+  "description": "Easily add Stripe boilerplate code to Nextjs, like webhook handling, and subscription updates. This package provides a thin wrapper around the Stripe API.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,7 +12,9 @@
     "stripe",
     "next",
     "nextjs",
-    "wrapper"
+    "wrapper",
+    "vercel",
+    "node"
   ],
   "dependencies": {
     "stripe": "^13.2.0"
