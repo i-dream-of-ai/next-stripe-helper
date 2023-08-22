@@ -227,6 +227,7 @@ import {
     getUserSubscription,
     getUserSubscriptionDetails,
     updateUserSubscriptionMetadata,
+    changeSubscriptionPlan,
     listUserSubscriptions,
     cancelUserSubscription
 } from 'next-stripe-helper';
@@ -258,6 +259,24 @@ const subscriptionDetails = await getUserSubscription('subscription_id');
 Parameters:
 
 - `subscriptionID` (required): The Stripe ID of the subscription.
+
+
+### Change a User's Subscription
+
+Change a users existing subscription using its Stripe ID:
+
+This will use the current payment method by default.
+Customer must have an existing subscription.
+
+```javascript
+const subscriptionDetails = await changeSubscriptionPlan('subscription_id', 'new_plan_id')
+```
+
+Parameters:
+
+- `subscriptionID` (required): The Stripe ID of the existing subscription.
+- `new_plan_id` (required): The Stripe plan ID of the new plan.
+
 
 ### Get Detailed Information About a Subscription
 

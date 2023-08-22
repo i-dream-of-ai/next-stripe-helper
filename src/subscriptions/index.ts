@@ -37,6 +37,11 @@ interface UserSubscriptionDetails {
 async function getUserSubscriptionDetails(subscriptionID: string): Promise<UserSubscriptionDetails> {
     try {
         const subscription = await getUserSubscription(subscriptionID);
+        if(!subscription){
+            return {
+                status: "No subscription."
+            }
+        }
         const price = await stripe.prices.retrieve(subscription.items.data[0].price.id);
         return {
             status: subscription.status,
@@ -80,6 +85,30 @@ async function updateUserSubscriptionMetadata(subscriptionID: string, metadata: 
         }); 
     } catch (error) {
         handleStripeError(error as Stripe.errors.StripeError);
+    }
+}
+
+/**
+ * Updates a customer's subscription to a new plan.
+ * 
+ * @param {string} subscriptionId - The ID of the subscription to be updated.
+ * @param {string} newPlanId - The ID of the new plan to which the subscription should be updated.
+ * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
+ * @throws {Error} - Throws an error if there's an issue updating the subscription.
+ */
+async function changeSubscriptionPlan(subscriptionId: string, newPlanId: string): Promise<Stripe.Subscription> {
+    try {
+        // Update the subscription to a new plan
+        const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
+            items: [{
+                id: subscriptionId,
+                plan: newPlanId
+            }]
+        });
+        return updatedSubscription;
+    } catch (error) {
+        console.error("Error updating subscription:", error);
+        throw error;
     }
 }
 
@@ -136,6 +165,7 @@ export {
     getUserSubscriptionDetails,
     updateUserSubscriptionMetadata,
     listUserSubscriptions,
+    changeSubscriptionPlan,
     cancelUserSubscription,
     getSubscriptionPeriod
 }
