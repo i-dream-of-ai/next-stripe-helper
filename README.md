@@ -227,6 +227,7 @@ Before you can use these utilities, you need to import them:
 
 ```javascript
 import {
+    createSubscription,
     getUserCurrentPlan,
     getUserSubscription,
     getUserSubscriptionDetails,
@@ -236,6 +237,20 @@ import {
     cancelUserSubscription
 } from 'next-stripe-helper';
 ```
+
+### Create a Subscription
+
+Create a subscription for a customer using the Price ID:
+
+```javascript
+const subscription = await createSubscription('customer_id', 'price_id');
+```
+
+Parameters:
+
+- `customerID` (required): The Customer ID of the user.
+- `priceId` (required): The Price ID of the plan.
+
 ### Retrieve a User's Current Plan (first subscription)
 
 Fetch details of a users first plan using the Customer ID:

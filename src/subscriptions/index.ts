@@ -1,6 +1,21 @@
 import Stripe from "stripe";
 import { handleStripeError, stripe } from "../utils/stripe";
 
+
+/**
+ * Create a new subscription for a customer.
+ * 
+ * @param {string} customerId - The ID of the customer.
+ * @param {string} priceId - The ID of the price (related to a product) to which the customer is subscribing.
+ * @returns {Promise<Stripe.Subscription>} - The newly created subscription object.
+ */
+async function createSubscription(customerId: string, priceId: string): Promise<Stripe.Subscription> {
+    return await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: priceId }]
+    });
+}
+
 async function getUserSubscriptions(customerId:string) {
     try {
       // Retrieve the customer's subscriptions
@@ -159,6 +174,7 @@ async function getSubscriptionPeriod(subscriptionId: string): Promise<{ start: D
 }
 
 export {
+    createSubscription,
     getUserCurrentPlan,
     getUserSubscription,
     getUserSubscriptions,
