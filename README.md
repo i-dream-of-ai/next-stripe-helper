@@ -92,7 +92,7 @@ Import the required functions:
 import { createCustomer, getCustomer, updateCustomer } from 'next-stripe-helper';
 ```
 
-1. **Create a New Stripe Customer**
+### Create a New Stripe Customer
 
    Create a new customer in Stripe using their email address.
 
@@ -104,7 +104,7 @@ import { createCustomer, getCustomer, updateCustomer } from 'next-stripe-helper'
 
    - `email` (required): The email address of the new customer.
 
-2. **Retrieve Customer Details**
+### Retrieve Customer Details
 
    Fetch the details of a specific customer using their Stripe customer ID.
 
@@ -116,7 +116,7 @@ import { createCustomer, getCustomer, updateCustomer } from 'next-stripe-helper'
 
    - `customerId` (required): The Stripe customer ID.
 
-3. **Update a Customer's Details**
+### Update a Customer's Details
 
    Update the details of a customer in Stripe.
 
@@ -131,6 +131,19 @@ import { createCustomer, getCustomer, updateCustomer } from 'next-stripe-helper'
 
    - `customerId` (required): The Stripe customer ID.
    - `updates` (required): An object containing key-value pairs of the properties to be updated.
+
+### Get a Customer's Payment Details
+
+   Get the payment details of a customer in Stripe.
+
+   ```javascript
+   const paymentMethods = await getCustomerPaymentMethods('customer_id');
+   ```
+
+   Parameters:
+
+   - `customerId` (required): The Stripe customer ID.
+
 
 ## Billing Portal Utilities
 
@@ -210,6 +223,7 @@ Before you can use these utilities, you need to import them:
 
 ```javascript
 import {
+    getUserCurrentPlan,
     getUserSubscription,
     getUserSubscriptionDetails,
     updateUserSubscriptionMetadata,
@@ -217,6 +231,21 @@ import {
     cancelUserSubscription
 } from 'next-stripe-helper';
 ```
+### Retrieve a User's Current Plan (first subscription)
+
+Fetch details of a users first plan using the Customer ID:
+
+```javascript
+const plan = await getUserCurrentPlan('customer__id');
+```
+
+Parameters:
+
+- `customerId` (required): The Customer ID of the user.
+
+Returns: 
+
+- plan or null if no plan is found
 
 ### Retrieve a User's Subscription
 
@@ -278,6 +307,23 @@ const cancelledSubscription = await cancelUserSubscription('subscription_id');
 Parameters:
 
 - `subscriptionID` (required): The Stripe ID of the subscription.
+
+### Retrieve User's Subscription Period
+
+To cancel a subscription:
+
+```javascript
+const periodData = await getSubscriptionPeriod('subscription_id');
+```
+
+Parameters:
+
+- `subscriptionID` (required): The Stripe ID of the subscription.
+
+Returns: 
+
+- `start` period start JS Date
+- `end` period end JS Date
 
 ## Webhook Handler with Next.js
 
