@@ -46,7 +46,7 @@ First, ensure that you've imported the necessary functions from the package:
 import { createCheckoutSession, createCheckoutSessionForSavingCard } from 'next-stripe-helper';
 ```
 
-1. **Create Checkout Session**
+### Create Checkout Session
 
    Create a checkout session with Stripe.
 
@@ -70,7 +70,7 @@ import { createCheckoutSession, createCheckoutSessionForSavingCard } from 'next-
    - `customerId` (required): The Stripe customer ID.
    - `additionalParams` (optional, default `{}`): Any other additional parameters.
 
-2. **Create Checkout Session for Saving Card**
+### Create Checkout Session for Saving Card
 
    Create a checkout session with Stripe for the purpose of saving a card.
 
