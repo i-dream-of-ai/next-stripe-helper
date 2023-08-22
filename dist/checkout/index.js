@@ -4,16 +4,20 @@ exports.createCheckoutSessionForSavingCard = exports.createCheckoutSession = voi
 const stripe_1 = require("../utils/stripe");
 /**
  * Create a checkout session in Stripe for making purchases or setting up subscriptions.
+ *
+ * @param options - The options for creating the checkout session.
+ * @returns A promise that resolves to the created checkout session or `undefined` if an error occurs.
+ * @throws {Stripe.errors.StripeError} If there's an error during session creation.
  */
-const createCheckoutSession = async (successUrl, cancelUrl = "", itemsArray, mode = "subscription", customerId, additionalParams = {}) => {
+const createCheckoutSession = async (options) => {
     try {
         const session = await stripe_1.stripe.checkout.sessions.create({
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-            line_items: itemsArray,
-            mode: mode,
-            customer: customerId,
-            ...additionalParams
+            success_url: options.successUrl,
+            cancel_url: options.cancelUrl,
+            line_items: options.itemsArray,
+            mode: options.mode,
+            customer: options.customerId,
+            ...options.additionalParams
         });
         return session;
     }
