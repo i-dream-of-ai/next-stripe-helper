@@ -11,14 +11,7 @@ const stripe_1 = require("../utils/stripe");
  */
 const createCheckoutSession = async (options) => {
     try {
-        const session = await stripe_1.stripe.checkout.sessions.create({
-            success_url: options.successUrl,
-            cancel_url: options.cancelUrl,
-            line_items: options.itemsArray,
-            mode: options.mode,
-            customer: options.customerId,
-            ...options.additionalParams
-        });
+        const session = await stripe_1.stripe.checkout.sessions.create(options);
         return session;
     }
     catch (error) {
