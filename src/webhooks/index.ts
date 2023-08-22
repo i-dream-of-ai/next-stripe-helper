@@ -23,7 +23,6 @@ export const webhookHandler = async (
         }
 
         stripeEvent = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-        console.log('stripe event', stripeEvent);
     } catch (err) {
         if (err instanceof Error) {
             throw new Error(`Webhook Error: ${err.message}`);
@@ -43,6 +42,8 @@ export const webhookHandler = async (
     ]);
 
     if (relevantEvents.has(stripeEvent.type)) {
+        console.log('stripe event: ', stripeEvent.type);
+
         try {
             switch (stripeEvent.type) {
                 case 'product.created':

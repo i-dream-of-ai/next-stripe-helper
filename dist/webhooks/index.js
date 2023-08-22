@@ -11,7 +11,6 @@ const webhookHandler = async (upsertProduct, upsertPrice, manageSubscriptionChan
             throw new Error('Missing body, signature, or webhook secret');
         }
         stripeEvent = stripe_1.stripe.webhooks.constructEvent(body, signature, webhookSecret);
-        console.log('stripe event', stripeEvent);
     }
     catch (err) {
         if (err instanceof Error) {
@@ -30,6 +29,7 @@ const webhookHandler = async (upsertProduct, upsertPrice, manageSubscriptionChan
         'customer.subscription.deleted',
     ]);
     if (relevantEvents.has(stripeEvent.type)) {
+        console.log('stripe event: ', stripeEvent.type);
         try {
             switch (stripeEvent.type) {
                 case 'product.created':
