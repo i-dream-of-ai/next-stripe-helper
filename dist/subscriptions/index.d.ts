@@ -22,11 +22,12 @@ declare function updateUserSubscriptionMetadata(subscriptionID: string, metadata
  * Updates a customer's subscription to a new plan.
  *
  * @param {string} subscriptionId - The ID of the subscription to be updated.
+ *  * @param {string} oldPlanId - The ID of the new plan to which the subscription should be updated.
  * @param {string} newPlanId - The ID of the new plan to which the subscription should be updated.
  * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
  * @throws {Error} - Throws an error if there's an issue updating the subscription.
  */
-declare function changeSubscriptionPlan(subscriptionId: string, newPlanId: string): Promise<Stripe.Subscription>;
+declare function changeSubscriptionPlan(subscriptionId: string, oldPlanId: string, newPlanId: string): Promise<Stripe.Subscription>;
 declare function listUserSubscriptions(customerID: string): Promise<Stripe.Subscription[]>;
 declare function cancelUserSubscription(subscriptionID: string): Promise<Stripe.Subscription>;
 /**

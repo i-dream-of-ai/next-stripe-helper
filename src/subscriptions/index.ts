@@ -107,20 +107,18 @@ async function updateUserSubscriptionMetadata(subscriptionID: string, metadata: 
  * Updates a customer's subscription to a new plan.
  * 
  * @param {string} subscriptionId - The ID of the subscription to be updated.
+ *  * @param {string} oldPlanId - The ID of the new plan to which the subscription should be updated.
  * @param {string} newPlanId - The ID of the new plan to which the subscription should be updated.
  * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
  * @throws {Error} - Throws an error if there's an issue updating the subscription.
  */
-async function changeSubscriptionPlan(subscriptionId: string, newPlanId: string): Promise<Stripe.Subscription> {
+async function changeSubscriptionPlan(subscriptionId: string, oldPlanId:string, newPlanId: string): Promise<Stripe.Subscription> {
     try {
-        // Retrieve the current subscription to get its item ID
-        const currentSubscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const currentItem = currentSubscription.items.data[0]; // Assuming only one item, adjust if multiple
 
         // Update the subscription to a new plan
         const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
             items: [{
-                id: currentItem.id,  // This is the subscription item's ID, not the subscription ID
+                id: oldPlanId,  // This is the subscription item's ID, not the subscription ID
                 plan: newPlanId
             }]
         });
