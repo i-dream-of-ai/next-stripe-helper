@@ -39,7 +39,7 @@ const createCheckoutSessionForSavingCard = async (
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'setup',
-      success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: successUrl,
       cancel_url: cancelUrl,
       payment_method_types: ['card'],
     });
