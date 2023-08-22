@@ -105,10 +105,13 @@ exports.updateUserSubscriptionMetadata = updateUserSubscriptionMetadata;
  */
 async function changeSubscriptionPlan(subscriptionId, newPlanId) {
     try {
+        // Retrieve the current subscription to get its item ID
+        const currentSubscription = await stripe_1.stripe.subscriptions.retrieve(subscriptionId);
+        const currentItem = currentSubscription.items.data[0]; // Assuming only one item, adjust if multiple
         // Update the subscription to a new plan
         const updatedSubscription = await stripe_1.stripe.subscriptions.update(subscriptionId, {
             items: [{
-                    id: subscriptionId,
+                    id: currentItem.id,
                     plan: newPlanId
                 }]
         });
