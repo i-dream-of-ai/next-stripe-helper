@@ -341,6 +341,263 @@ export async function POST(req) {
 
 ```
 
+Here's an example of Stripe Helper Functions for a MongoDB Database.
+
+``` javascript
+import clientPromise from '@/lib/mongodb'
+import { ObjectId } from 'mongodb'
+
+export const getActiveProductsWithPrices = async () => {
+    try {
+        const data = await clientPromise
+            .collection('products')
+            .aggregate([
+                {
+                    $lookup: {
+                        from: 'prices',
+                        localField: '_id',
+                        foreignField: 'product_id',
+                        as: 'prices',
+                    },
+                },
+                { $match: { active: true, 'prices.active': true } },
+                { $sort: { 'metadata.index': 1, 'prices.unit_amount': 1 } },
+            ])
+            .toArray()
+
+        return data || []
+    } catch (error) {
+        console.log(error.message)
+        return []
+    }
+}
+
+export const getActiveApiProductsWithPrices = async () => {
+    try {
+
+        const data = await clientPromise
+            .collection('products')
+            .aggregate([
+                {
+                    $lookup: {
+                        from: 'prices',
+                        localField: '_id',
+                        foreignField: 'product_id',
+                        as: 'prices',
+                    },
+                },
+                {
+                    $match: {
+                        active: true,
+                        'prices.active': true,
+                        'metadata.is_api_product': 'true',
+                    },
+                },
+                { $sort: { 'metadata.index': 1, 'prices.unit_amount': 1 } },
+            ])
+            .toArray()
+
+        return data || []
+    } catch (error) {
+        console.log(error.message)
+        return []
+    }
+}
+
+
+export const upsertProductRecord = async (product) => {
+    const productData = {
+        _id: product.id,
+        active: product.active,
+        name: product.name,
+        description: product.description ?? undefined,
+        image: product.images?.[0] ?? null,
+        metadata: product.metadata,
+    }
+
+    const result = await clientPromise
+        .collection('products')
+        .updateOne(
+            { _id: productData._id },
+            { $set: productData },
+            { upsert: true }
+        )
+
+    if (result.upsertedCount || result.modifiedCount) {
+        console.log(`Product inserted/updated: ${product.id}`)
+    }
+}
+
+export const upsertPriceRecord = async (price) => {
+    const priceData = {
+        _id: price.id,
+        product_id: typeof price.product === 'string' ? price.product : '',
+        active: price.active,
+        currency: price.currency,
+        description: price.nickname ?? undefined,
+        type: price.type,
+        unit_amount: price.unit_amount ?? undefined,
+        interval: price.recurring?.interval,
+        interval_count: price.recurring?.interval_count,
+        trial_period_days: price.recurring?.trial_period_days,
+        metadata: price.metadata,
+    }
+
+    const result = await clientPromise
+        .collection('prices')
+        .updateOne(
+            { _id: priceData._id },
+            { $set: priceData },
+            { upsert: true }
+        )
+
+    if (result.upsertedCount || result.modifiedCount) {
+        console.log(`Price inserted/updated: ${price.id}`)
+    }
+}
+
+const copyBillingDetailsToCustomer = async (uuid, payment_method) => {
+    const customer = payment_method.customer
+    const { name, phone, address } = payment_method.billing_details
+    if (!name || !phone || !address) return
+
+    await stripe.customers.update(customer, { name, phone, address })
+    const { db } = await connectToDatabase()
+    const result = await db.collection('users').findOneAndUpdate(
+        { _id: uuid },
+        {
+            $set: {
+                billing_address: { ...address },
+                payment_method: { ...payment_method[payment_method.type] },
+            },
+        },
+        { returnOriginal: false }
+    )
+    if (!result.value) {
+        throw new Error('Error updating user billing details')
+    }
+}
+
+export const manageSubscriptionStatusChange = async (
+    subscriptionId,
+    customerId,
+    createAction = false
+) => {
+    console.log('manageSubscriptionStatusChange: Started.')
+    console.log(customerId)
+
+
+    const customerData = await clientPromise
+        .collection('customers')
+        .findOne({ stripe_customer_id: customerId })
+
+    if (!customerData) {
+        console.log(
+            'manageSubscriptionStatusChange: Customer not found. id:',
+            customerId
+        )
+        throw new Error('Customer not found')
+    } else {
+        console.log(
+            'manageSubscriptionStatusChange: Customer found: ',
+            customerData
+        )
+    }
+
+    const uuid = customerData._id.toString()
+
+    let subscription
+    try {
+        subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+            expand: ['default_payment_method'],
+        })
+    } catch (error) {
+        console.log('manageSubscriptionStatusChange: Stripe Error: ', error)
+        throw new Error(
+            'Stripe error retrieving subscription in manageSubscriptionStatusChange.'
+        )
+    }
+
+    if (!subscription) {
+        throw new Error(
+            'Stripe error retrieving subscription in manageSubscriptionStatusChange.',
+            subscription
+        )
+    } else {
+        console.log(
+            'manageSubscriptionStatusChange: Stripe subscription found.',
+            subscription.id
+        )
+    }
+    const subscriptionItems = subscription.items.data.map((item) => ({
+        price_id: item.price.id,
+        product_id: item.price.product,
+        quantity: item.quantity,
+    }))
+
+    // console.log('subscriptionItems',subscriptionItems)
+
+    const subscriptionData = {
+        _id: subscription.id,
+        user_id: new ObjectId(uuid),
+        team_id: new ObjectId(subscription.metadata.team_id),
+        metadata: subscription.metadata,
+        status: subscription.status,
+        price_id: subscription.items.data[0].price.id,
+        items: subscriptionItems,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        cancel_at: subscription.cancel_at
+            ? new Date(subscription.cancel_at * 1000)
+            : null,
+        canceled_at: subscription.canceled_at
+            ? new Date(subscription.canceled_at * 1000)
+            : null,
+        current_period_start: new Date(
+            subscription.current_period_start * 1000
+        ),
+        current_period_end: new Date(subscription.current_period_end * 1000),
+        created: new Date(subscription.created * 1000),
+        ended_at: subscription.ended_at
+            ? new Date(subscription.ended_at * 1000)
+            : null,
+        trial_start: subscription.trial_start
+            ? new Date(subscription.trial_start * 1000)
+            : null,
+        trial_end: subscription.trial_end
+            ? new Date(subscription.trial_end * 1000)
+            : null,
+    }
+
+    const result = await clientPromise
+        .collection('subscriptions')
+        .updateOne(
+            { user_id: new ObjectId(uuid), _id: subscription.id },
+            { $set: subscriptionData },
+            { upsert: true }
+        )
+
+    console.log('manageSubscriptionStatusChange: update: ', result)
+
+    if (result.upsertedCount || result.modifiedCount) {
+        console.log(
+            `Inserted/updated subscription [${subscription.id}] for user [${uuid}]`
+        )
+    } else {
+        console.log(
+            `manageSubscriptionStatusChange: Subscription for user [${uuid}] was not updated.`,
+            result
+        )
+    }
+
+    if (createAction && subscription.default_payment_method && uuid) {
+        await copyBillingDetailsToCustomer(
+            uuid,
+            subscription.default_payment_method
+        )
+    }
+}
+```
+
 ## Sync with Stripe
 
 ## Syncing Stripe Products with Your Local Database
