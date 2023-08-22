@@ -1,8 +1,5 @@
 # next-stripe-helper
 
-A utility module to simplify Stripe checkout session interactions in a Next.js environment.
-
-## Introduction
 `next-stripe-helper` is a module designed to simplify the integration of Stripe's functionality into Next.js applications. Whether you're looking to process payments, manage customers, or handle subscriptions, this utility aims to streamline those interactions. This utility is perfect for developers building e-commerce platforms, subscription-based services, or any other application that requires payment functionalities within the Next.js ecosystem.
 
 ## Installation
@@ -19,7 +16,7 @@ You will likely want to start in TEST MODE!! Make sure you use the test mode swi
 
 Ensure you have set the `STRIPE_SECRET_LIVE` or `STRIPE_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). With Next.js, you can access these environment variables using `process.env`.
 
-Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). With Next.js, you can access these environment variables using `process.env`.
+Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). 
 
 ``` dotenv
 
@@ -32,7 +29,7 @@ STRIPE_WEBHOOK_SECRET_LIVE=your_LIVE_stripe_webhook_secret
 
 ```
 
-Make sure you complete your checkout settings from within the Stripe dashboard before using any checkout functions. [Checkout Settings](https://dashboard.stripe.com/settings/checkout)
+Make sure you complete your checkout settings from within the Stripe dashboard before using any checkout functions. [Setup Checkout Settings](https://dashboard.stripe.com/settings/checkout)
 
 Make sure you add your webhooks endpoint URL!! [Setup Webhook URL](https://dashboard.stripe.com/webhooks)
 
