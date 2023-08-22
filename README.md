@@ -35,6 +35,7 @@ Make sure you add your webhooks endpoint URL!! [Setup Webhook URL](https://dashb
 
 ## Usage
 
+## Checkout Sessions
 First, ensure that you've imported the necessary functions from the package:
 
 ```javascript
@@ -281,6 +282,8 @@ Parameters:
 ## Webhook Handler with Next.js
 
 In the Next.js environment, API routes provide a solution to build your backend functionality. The `next-stripe-helper` comes equipped with a webhook handler specifically designed for easy integration with Next.js API routes.
+
+If you add the webhookHandler to an api route, your Database will automatically stay in sync with Stripe Products, Prices, and Subscriptions.
 
 ### Usage
 
@@ -594,6 +597,8 @@ export const manageSubscriptionStatusChange = async (
 ## Syncing Stripe Products with Your Local Database
 
 To ensure that your local database reflects your current Stripe products, you can utilize the provided syncing utility. First create DB functions, then use them with the syncWithStripe function in an api endpoint. You can then create a simple button in your app that triggers the sync function.
+
+Note: If you add the webhookHandler shown above to an api route, your Database will automatically stay in sync with Stripe Products, Prices, and Subscriptions.
 
 ### Integration Steps:
 
