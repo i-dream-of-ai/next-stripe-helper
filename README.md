@@ -298,46 +298,33 @@ Then, set up an API route in Next.js to handle the Stripe webhook:
 ```javascript
 // pages/api/stripe/webhook/route.js
 
-import { webhookHandler } from 'stripe-next-helper'; 
+import { webhookHandler } from 'next-stripe-helper';
+import { manageSubscriptionStatusChange, upsertPriceRecord, upsertProductRecord } from '@/lib/stripe';
+import { headers } from "next/headers"
 
-// Import or define upsertProduct, upsertPrice, and manageSubscriptionChange here. These are functions you create to handle the Database updates.
-
-// Ensure you have error handling and necessary functions.
 export async function POST(req) {
-  try {
-    // Validate if the request is legitimate (e.g., you might want to check if there's a user session, but for a stripe webhook, it might not be necessary.)
+    try {
+        const body = await req.text();
+        const signature = headers().get("Stripe-Signature");
 
-    const handleWebhook = webhookHandler(
-      async (product) => {
-        // upsertProduct logic here
-      },
-      async (price) => {
-        // upsertPrice logic here
-      },
-      async (subscriptionId, customerId, isNew) => {
-        // manageSubscriptionChange logic here
-      }
-    );
+        if (!signature) {
+            throw new Error('Stripe signature missing from headers');
+        }
 
-    // Call the handler with the adapted request/response format
-    const response = await handleWebhook(req, {
-      status: (statusCode) => ({ statusCode }),
-      json: (body) => new Response(JSON.stringify(body)),
-      setHeader: (name, value) => {}, // You can extend this if needed
-      end: (text) => new Response(text)
-    });
+        await webhookHandler(
+            upsertProductRecord, 
+            upsertPriceRecord, 
+            manageSubscriptionStatusChange, 
+            { body, signature }
+        );
 
-    return response;
-
-  } catch (error) {
-    // Handle your errors. If it's a validation error, return a 422 status. Otherwise, return a 500 status.
-    if (/* it's a validation error */) {
-      return new Response(JSON.stringify(/* error details */), { status: 422 });
+        return new Response(null, { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
-
-    return new Response(null, { status: 500 });
-  }
 }
+
 
 ```
 
@@ -347,9 +334,13 @@ Here's an example of Stripe Helper Functions for a MongoDB Database.
 import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 
+const dbName = process.env.MONGODB_DB
+
 export const getActiveProductsWithPrices = async () => {
     try {
-        const data = await clientPromise
+        const client = await clientPromise
+        const data = await client
+            .db(dbName)
             .collection('products')
             .aggregate([
                 {
@@ -374,8 +365,9 @@ export const getActiveProductsWithPrices = async () => {
 
 export const getActiveApiProductsWithPrices = async () => {
     try {
-
-        const data = await clientPromise
+        const client = await clientPromise
+        const data = await client
+            .db(dbName)
             .collection('products')
             .aggregate([
                 {
@@ -414,8 +406,9 @@ export const upsertProductRecord = async (product) => {
         image: product.images?.[0] ?? null,
         metadata: product.metadata,
     }
-
-    const result = await clientPromise
+    const client = await clientPromise
+    const result = await client
+        .db(dbName)
         .collection('products')
         .updateOne(
             { _id: productData._id },
@@ -442,8 +435,9 @@ export const upsertPriceRecord = async (price) => {
         trial_period_days: price.recurring?.trial_period_days,
         metadata: price.metadata,
     }
-
-    const result = await clientPromise
+    const client = await clientPromise
+    const result = await client
+        .db(dbName)
         .collection('prices')
         .updateOne(
             { _id: priceData._id },
@@ -462,8 +456,8 @@ const copyBillingDetailsToCustomer = async (uuid, payment_method) => {
     if (!name || !phone || !address) return
 
     await stripe.customers.update(customer, { name, phone, address })
-    const { db } = await connectToDatabase()
-    const result = await db.collection('users').findOneAndUpdate(
+    const client = await clientPromise
+    const result = await client.db(dbName).collection('users').findOneAndUpdate(
         { _id: uuid },
         {
             $set: {
@@ -485,9 +479,9 @@ export const manageSubscriptionStatusChange = async (
 ) => {
     console.log('manageSubscriptionStatusChange: Started.')
     console.log(customerId)
-
-
-    const customerData = await clientPromise
+    const client = await clientPromise
+    const customerData = await client
+        .db(dbName)
         .collection('customers')
         .findOne({ stripe_customer_id: customerId })
 
@@ -567,8 +561,8 @@ export const manageSubscriptionStatusChange = async (
             ? new Date(subscription.trial_end * 1000)
             : null,
     }
-
-    const result = await clientPromise
+    const result = await client
+        .db(dbName)
         .collection('subscriptions')
         .updateOne(
             { user_id: new ObjectId(uuid), _id: subscription.id },

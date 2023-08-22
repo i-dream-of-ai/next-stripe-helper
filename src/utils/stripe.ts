@@ -1,50 +1,39 @@
 import Stripe from 'stripe';
 
-const stripeSecret = process.env.STRIPE_SECRET_LIVE ?? process.env.STRIPE_SECRET;
+const stripeSecret: string = process.env.STRIPE_SECRET_LIVE || process.env.STRIPE_SECRET || "";
 
 /**
  * Initialize the Stripe SDK with the secret key.
- * 
- * @type {Stripe}
  */
-const stripe = new Stripe(stripeSecret);
+const stripe: Stripe = new Stripe(stripeSecret as string, {
+    apiVersion: "2023-08-16"
+});
+
 
 /**
  * Handles Stripe specific errors and throws a user-friendly message.
  * 
- * @function
- * @param {object} error - The error object returned from Stripe.
- * @throws {Error} - Throws a user-friendly error message based on the error type from Stripe.
+ * @param error - The error object returned from Stripe.
+ * @throws Throws a user-friendly error message based on the error type from Stripe.
  */
-function handleStripeError(error) {
+function handleStripeError(error: Stripe.errors.StripeError): never {
     switch (error.type) {
         case 'StripeCardError':
-            // Handle card errors
             console.error('Card error:', error.message);
             throw new Error('There was an issue with your card. Please check your card details and try again.');
-        
-        case 'RateLimitError':
-            // Handle requests that hit Stripe's rate limits
+        case 'StripeRateLimitError':
             console.error('Rate limit error:', error.message);
             throw new Error('Too many requests made to Stripe. Please try again later.');
-        
         case 'StripeInvalidRequestError':
-            // Invalid parameters were supplied to Stripe's API
             console.error('Invalid request error:', error.message);
             throw new Error('There was an issue with the payment request. Please contact support.');
-        
         case 'StripeAPIError':
-            // An error occurred internally with Stripe's API
             console.error('API error:', error.message);
             throw new Error('There was an internal issue with our payment provider. Please try again later.');
-        
         case 'StripeConnectionError':
-            // Network communication with Stripe failed
             console.error('Connection error:', error.message);
             throw new Error('Unable to connect to our payment provider. Please check your internet connection and try again.');
-        
         default:
-            // Handle any other types of unexpected errors
             console.error('Unknown error:', error.message);
             throw new Error('An unexpected error occurred. Please try again later.');
     }

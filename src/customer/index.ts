@@ -1,3 +1,4 @@
+import Stripe from "stripe";
 import { stripe, handleStripeError } from "../utils/stripe";
 
 /**
@@ -7,11 +8,11 @@ import { stripe, handleStripeError } from "../utils/stripe";
  * @returns {object} - The created customer object from Stripe.
  * @throws {Error} - Throws an error if the Stripe API call fails.
  */
-async function createCustomer(email) {
+async function createCustomer(email: string) {
     try {
         return await stripe.customers.create({ email });
     } catch (error) {
-        handleStripeError(error);
+        handleStripeError(error as Stripe.errors.StripeError);
     }
 }
 
@@ -22,11 +23,11 @@ async function createCustomer(email) {
  * @returns {object} - The customer object from Stripe.
  * @throws {Error} - Throws an error if the Stripe API call fails.
  */
-async function getCustomer(customerId) {
+async function getCustomer(customerId: string) {
     try {
         return await stripe.customers.retrieve(customerId);
     } catch (error) {
-        handleStripeError(error);
+        handleStripeError(error as Stripe.errors.StripeError);
     }
 }
 
@@ -38,11 +39,11 @@ async function getCustomer(customerId) {
  * @returns {object} - The updated customer object from Stripe.
  * @throws {Error} - Throws an error if the Stripe API call fails.
  */
-async function updateCustomer(customerId, updates) {
+async function updateCustomer(customerId: string, updates: object) {
     try {
         return await stripe.customers.update(customerId, updates);
     } catch (error) {
-        handleStripeError(error);
+        handleStripeError(error as Stripe.errors.StripeError);
     }
 }
 
