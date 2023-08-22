@@ -34,7 +34,7 @@ const createCheckoutSessionForSavingCard = async (
   customerId: string,
   successUrl: string,
   cancelUrl: string
-): Promise<string | undefined> => {
+): Promise<Stripe.Checkout.Session> => {
   try {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -43,7 +43,7 @@ const createCheckoutSessionForSavingCard = async (
       cancel_url: cancelUrl,
       payment_method_types: ['card'],
     });
-    return session.id;
+    return session;
   } catch (error) {
     handleStripeError(error as Stripe.errors.StripeError);
   }

@@ -6,5 +6,5 @@ declare const createCheckoutSession: (successUrl: string, cancelUrl: string | un
 /**
  * Create a checkout session in Stripe specifically for saving a customer's card information.
  */
-declare const createCheckoutSessionForSavingCard: (customerId: string, successUrl: string, cancelUrl: string) => Promise<string | undefined>;
+declare const createCheckoutSessionForSavingCard: (customerId: string, successUrl: string, cancelUrl: string) => Promise<Stripe.Checkout.Session>;
 export { createCheckoutSession, createCheckoutSessionForSavingCard };

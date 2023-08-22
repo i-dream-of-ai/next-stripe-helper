@@ -34,7 +34,7 @@ const createCheckoutSessionForSavingCard = async (customerId, successUrl, cancel
             cancel_url: cancelUrl,
             payment_method_types: ['card'],
         });
-        return session.id;
+        return session;
     }
     catch (error) {
         (0, stripe_1.handleStripeError)(error);
