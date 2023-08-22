@@ -1,7 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserCurrentPlan = void 0;
+exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserCurrentPlan = exports.createSubscription = void 0;
 const stripe_1 = require("../utils/stripe");
+/**
+ * Create a new subscription for a customer.
+ *
+ * @param {string} customerId - The ID of the customer.
+ * @param {string} priceId - The ID of the price (related to a product) to which the customer is subscribing.
+ * @returns {Promise<Stripe.Subscription>} - The newly created subscription object.
+ */
+async function createSubscription(customerId, priceId) {
+    return await stripe_1.stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: priceId }]
+    });
+}
+exports.createSubscription = createSubscription;
 async function getUserSubscriptions(customerId) {
     try {
         // Retrieve the customer's subscriptions

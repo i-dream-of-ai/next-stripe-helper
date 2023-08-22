@@ -1,4 +1,12 @@
 import Stripe from "stripe";
+/**
+ * Create a new subscription for a customer.
+ *
+ * @param {string} customerId - The ID of the customer.
+ * @param {string} priceId - The ID of the price (related to a product) to which the customer is subscribing.
+ * @returns {Promise<Stripe.Subscription>} - The newly created subscription object.
+ */
+declare function createSubscription(customerId: string, priceId: string): Promise<Stripe.Subscription>;
 declare function getUserSubscriptions(customerId: string): Promise<Stripe.Response<Stripe.ApiList<Stripe.Subscription>> | null>;
 declare function getUserSubscription(subscriptionID: string): Promise<Stripe.Subscription>;
 interface UserSubscriptionDetails {
@@ -32,4 +40,4 @@ declare function getSubscriptionPeriod(subscriptionId: string): Promise<{
     start: Date;
     end: Date;
 }>;
-export { getUserCurrentPlan, getUserSubscription, getUserSubscriptions, getUserSubscriptionDetails, updateUserSubscriptionMetadata, listUserSubscriptions, changeSubscriptionPlan, cancelUserSubscription, getSubscriptionPeriod };
+export { createSubscription, getUserCurrentPlan, getUserSubscription, getUserSubscriptions, getUserSubscriptionDetails, updateUserSubscriptionMetadata, listUserSubscriptions, changeSubscriptionPlan, cancelUserSubscription, getSubscriptionPeriod };
