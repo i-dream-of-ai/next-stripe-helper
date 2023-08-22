@@ -1,0 +1,54 @@
+# Directories
+node_modules/
+test/
+tests/
+coverage/
+dist/
+build/
+docs/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VCS
+.git/
+.gitignore
+.gitattributes
+.svn/
+
+# Development environment files
+.nyc_output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build artifacts
+*.swp
+*.swo
+*.bak
+
+# CI/CD
+.travis.yml
+.circleci/
+.github/
+.gitlab-ci.yml
+.appveyor.yml
+
+# Configuration
+*.config.js
+*.env
+*.env.example
+*.lock
+
+# Editor files
+*.iml
+.idea/
+.vscode/
+
+# OS generated
+*.pid
+*.seed
+*.pid.lock
