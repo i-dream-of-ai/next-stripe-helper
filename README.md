@@ -1,6 +1,10 @@
 # next-stripe-helper
 
-`next-stripe-helper` is a module designed to simplify the integration of Stripe's functionality into Next.js applications. Whether you're looking to process payments, manage customers, or handle subscriptions, this utility aims to streamline those interactions. This utility is perfect for developers building e-commerce platforms, subscription-based services, or any other application that requires payment functionalities within the Next.js ecosystem.
+`next-stripe-helper` is a module designed to simplify the integration of Stripe's functionality into Next.js applications. Whether you're looking to process payments, manage customers, or handle subscriptions, this utility aims to streamline those interactions. 
+
+This utility is perfect for developers building e-commerce platforms, subscription-based services, or any other application that requires payment functionalities within a JS or TS ecosystem.
+
+Includes a smart webhook handler that will automatically keep your database up to date with current plans, pricing, and subscriptions.
 
 ## Installation
 
