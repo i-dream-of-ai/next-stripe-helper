@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserCurrentPlan = exports.createSubscription = void 0;
+exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.updateSubscriptionPlan = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserCurrentPlan = exports.createSubscription = void 0;
 const stripe_1 = require("../utils/stripe");
 /**
  * Create a new subscription for a customer.
@@ -105,19 +105,47 @@ exports.updateUserSubscriptionMetadata = updateUserSubscriptionMetadata;
 /**
  * Updates a customer's subscription to a new plan. Deletes the old one plan and adds the new one to the subscription.
  *
- * @param {string} subscriptionId - The ID of the subscription to be updated.
- * @param {string} subItemId - The ID of the subscription item to which the plan should be updated.
- * @param {string} newPriceId - The price ID of the new plan to which the subscription should be updated.
+ *
+ * @param {string} subscriptionId - Subscription ID
+ *
+ * @param {options} Stripe.Subscription.Params Subscription params
+ *
  * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
  * @throws {Error} - Throws an error if there's an issue updating the subscription.
  */
-async function changeSubscriptionPlan(subscriptionId, subItemId, newPriceId) {
+async function updateSubscriptionPlan(subscriptionId, options) {
+    try {
+        // Update the subscription to a new plan
+        const updatedSubscription = await stripe_1.stripe.subscriptions.update(subscriptionId, options);
+        return updatedSubscription;
+    }
+    catch (error) {
+        console.error("Error updating subscription:", error);
+        throw error;
+    }
+}
+exports.updateSubscriptionPlan = updateSubscriptionPlan;
+/**
+ * Updates a customer's subscription to a new plan. Deletes the old one plan, adds the new one to the subscription, and charges the prorated price.
+ *
+ *
+ * @param {string} subscriptionId - Subscription ID
+ *
+ * @param {string} oldItemId - Item ID that you want to update.
+ *
+ * @param {string} newPriceId - PRICE ID that you want to change to.
+ *
+ * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
+ * @throws {Error} - Throws an error if there's an issue updating the subscription.
+ */
+async function changeSubscriptionPlan(subscriptionId, oldItemId, newPriceId) {
     try {
         // Update the subscription to a new plan
         const updatedSubscription = await stripe_1.stripe.subscriptions.update(subscriptionId, {
+            proration_behavior: "always_invoice",
             items: [
                 {
-                    id: subItemId,
+                    id: oldItemId,
                     deleted: true,
                 },
                 {

@@ -280,11 +280,27 @@ Parameters:
 - `subscriptionID` (required): The Stripe ID of the subscription.
 
 
+### Update a User's Subscription
+
+Update a users existing subscription:
+
+This will use the current payment method by default.
+Customer must have an existing subscription.
+
+```javascript
+const subscriptionDetails = await changeSubscriptionPlan('subscription_id', 'options object')
+```
+
+Parameters:
+
+- `subscriptionID` (required): The Stripe ID of the existing subscription.
+- `options` : The Stripe api subscription update parameters.
+
 ### Change a User's Subscription
 
-Change a users existing subscription using its Stripe ID:
+Change a users existing subscription first item product/price using its Stripe ID:
 
-Deletes the old one plan and adds the new one to the subscription.
+Deletes the old one plan/price and adds the new one to the subscription item.
 This will use the current payment method by default.
 Customer must have an existing subscription.
 

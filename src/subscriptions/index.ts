@@ -113,27 +113,57 @@ async function updateUserSubscriptionMetadata(subscriptionID: string, metadata: 
 /**
  * Updates a customer's subscription to a new plan. Deletes the old one plan and adds the new one to the subscription.
  * 
- * @param {string} subscriptionId - The ID of the subscription to be updated.
- * @param {string} subItemId - The ID of the subscription item to which the plan should be updated.
- * @param {string} newPriceId - The price ID of the new plan to which the subscription should be updated.
+ *  
+ * @param {string} subscriptionId - Subscription ID
+ * 
+ * @param {options} Stripe.Subscription.Params Subscription params
+ * 
  * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
  * @throws {Error} - Throws an error if there's an issue updating the subscription.
  */
-async function changeSubscriptionPlan(subscriptionId: string, subItemId:string, newPriceId: string): Promise<Stripe.Subscription> {
+async function updateSubscriptionPlan(subscriptionId:string, options: Stripe.SubscriptionUpdateParams): Promise<Stripe.Subscription> {
+    try {
+
+        // Update the subscription to a new plan
+        const updatedSubscription = await stripe.subscriptions.update(subscriptionId, options);
+
+        return updatedSubscription;
+    } catch (error) {
+        console.error("Error updating subscription:", error);
+        throw error;
+    }
+}
+
+
+/**
+ * Updates a customer's subscription to a new plan. Deletes the old one plan, adds the new one to the subscription, and charges the prorated price.
+ * 
+ *  
+ * @param {string} subscriptionId - Subscription ID
+ * 
+ * @param {string} oldItemId - Item ID that you want to update.
+ * 
+ * @param {string} newPriceId - PRICE ID that you want to change to.
+ * 
+ * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
+ * @throws {Error} - Throws an error if there's an issue updating the subscription.
+ */
+async function changeSubscriptionPlan(subscriptionId:string, oldItemId:string, newPriceId:string): Promise<Stripe.Subscription> {
     try {
 
         // Update the subscription to a new plan
         const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
+            proration_behavior: "always_invoice",
             items: [
-                {
-                  id: subItemId,
-                  deleted: true,
-                },
-                {
-                  price: newPriceId,
-                },
-              ],
-        });
+              {
+                id: oldItemId,
+                deleted: true,
+              },
+              {
+                price: newPriceId,
+              },
+            ],
+          });
 
         return updatedSubscription;
     } catch (error) {
@@ -197,6 +227,7 @@ export {
     updateUserSubscriptionMetadata,
     listUserSubscriptions,
     changeSubscriptionPlan,
+    updateSubscriptionPlan,
     cancelUserSubscription,
     getSubscriptionPeriod
 }
