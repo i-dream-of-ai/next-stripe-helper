@@ -263,9 +263,9 @@ Parameters:
 
 - `customerId` (required): The Customer ID of the user.
 
-Returns: 
-
-- plan or null if no plan is found
+Returns: object {subscription, plan}
+- first subscription or null
+- first plan or null if no plan is found
 
 ### Retrieve a User's Subscription
 
@@ -284,6 +284,7 @@ Parameters:
 
 Change a users existing subscription using its Stripe ID:
 
+Deletes the old one plan and adds the new one to the subscription.
 This will use the current payment method by default.
 Customer must have an existing subscription.
 

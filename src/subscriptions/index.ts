@@ -69,23 +69,30 @@ async function getUserSubscriptionDetails(subscriptionID: string): Promise<UserS
 
 async function getUserCurrentPlan(customerId:string) {
     try {
-      // Retrieve the customer's subscriptions
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-      });
+        // Retrieve the customer's subscriptions
+        const subscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+        });
+    
+        if (subscriptions.data.length === 0) {
+            console.log('Customer has no subscriptions: ',customerId)
+            return {
+                subscription:null, 
+                plan:null
+            };// Customer has no subscriptions
+        }
+    
+        // Assuming the customer only has one subscription.
+        // If a customer can have multiple subscriptions, you'll want to loop over these.
+        const subscription = subscriptions.data[0];
+        
+        // Retrieve the plan from the subscription's items
+        const plan = subscription.items.data[0].plan;
   
-      if (subscriptions.data.length === 0) {
-        return null; // Customer has no subscriptions
-      }
-  
-      // Assuming the customer only has one subscription.
-      // If a customer can have multiple subscriptions, you'll want to loop over these.
-      const subscription = subscriptions.data[0];
-      
-      // Retrieve the plan from the subscription's items
-      const plan = subscription.items.data[0].plan;
-  
-      return plan;
+        return {
+            subscription:subscription, 
+            plan:plan
+        };
   
     } catch (error) {
       console.error("Error fetching plan for user:", error);
@@ -104,23 +111,28 @@ async function updateUserSubscriptionMetadata(subscriptionID: string, metadata: 
 }
 
 /**
- * Updates a customer's subscription to a new plan.
+ * Updates a customer's subscription to a new plan. Deletes the old one plan and adds the new one to the subscription.
  * 
  * @param {string} subscriptionId - The ID of the subscription to be updated.
- *  * @param {string} oldPlanId - The ID of the new plan to which the subscription should be updated.
- * @param {string} newPlanId - The ID of the new plan to which the subscription should be updated.
+ * @param {string} subItemId - The ID of the subscription item to which the plan should be updated.
+ * @param {string} newPriceId - The price ID of the new plan to which the subscription should be updated.
  * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
  * @throws {Error} - Throws an error if there's an issue updating the subscription.
  */
-async function changeSubscriptionPlan(subscriptionId: string, oldPlanId:string, newPlanId: string): Promise<Stripe.Subscription> {
+async function changeSubscriptionPlan(subscriptionId: string, subItemId:string, newPriceId: string): Promise<Stripe.Subscription> {
     try {
 
         // Update the subscription to a new plan
         const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
-            items: [{
-                id: oldPlanId,  // This is the subscription item's ID, not the subscription ID
-                plan: newPlanId
-            }]
+            items: [
+                {
+                  id: subItemId,
+                  deleted: true,
+                },
+                {
+                  price: newPriceId,
+                },
+              ],
         });
 
         return updatedSubscription;

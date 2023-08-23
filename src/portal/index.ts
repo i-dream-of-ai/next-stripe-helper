@@ -1,12 +1,9 @@
 import Stripe from 'stripe';
 import { handleStripeError, stripe } from '../utils/stripe';
 
-const createPortalLink = async (customer: string , returnUrl: string) => {
+const createPortalLink = async (object: Stripe.BillingPortal.SessionCreateParams) => {
     try {
-        const { url } = await stripe.billingPortal.sessions.create({
-            customer: customer,
-            return_url: returnUrl,
-        });
+        const { url } = await stripe.billingPortal.sessions.create(object);
         return url;
     } catch (error) {
         handleStripeError(error as Stripe.errors.StripeError);

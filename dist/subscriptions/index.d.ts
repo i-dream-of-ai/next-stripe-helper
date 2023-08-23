@@ -14,20 +14,26 @@ interface UserSubscriptionDetails {
     [key: string]: string;
 }
 declare function getUserSubscriptionDetails(subscriptionID: string): Promise<UserSubscriptionDetails>;
-declare function getUserCurrentPlan(customerId: string): Promise<Stripe.Plan | null>;
+declare function getUserCurrentPlan(customerId: string): Promise<{
+    subscription: null;
+    plan: null;
+} | {
+    subscription: Stripe.Subscription;
+    plan: Stripe.Plan;
+}>;
 declare function updateUserSubscriptionMetadata(subscriptionID: string, metadata: {
     [key: string]: string;
 }): Promise<Stripe.Subscription>;
 /**
- * Updates a customer's subscription to a new plan.
+ * Updates a customer's subscription to a new plan. Deletes the old one plan and adds the new one to the subscription.
  *
  * @param {string} subscriptionId - The ID of the subscription to be updated.
- *  * @param {string} oldPlanId - The ID of the new plan to which the subscription should be updated.
- * @param {string} newPlanId - The ID of the new plan to which the subscription should be updated.
+ * @param {string} subItemId - The ID of the subscription item to which the plan should be updated.
+ * @param {string} newPriceId - The price ID of the new plan to which the subscription should be updated.
  * @returns {Promise<Stripe.Subscription>} - A promise that resolves to the updated subscription.
  * @throws {Error} - Throws an error if there's an issue updating the subscription.
  */
-declare function changeSubscriptionPlan(subscriptionId: string, oldPlanId: string, newPlanId: string): Promise<Stripe.Subscription>;
+declare function changeSubscriptionPlan(subscriptionId: string, subItemId: string, newPriceId: string): Promise<Stripe.Subscription>;
 declare function listUserSubscriptions(customerID: string): Promise<Stripe.Subscription[]>;
 declare function cancelUserSubscription(subscriptionID: string): Promise<Stripe.Subscription>;
 /**
