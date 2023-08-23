@@ -1,7 +1,6 @@
 import Stripe from "stripe";
 import { handleStripeError, stripe } from "../utils/stripe";
 
-
 /**
  * Create a new subscription for a customer.
  * 
@@ -109,6 +108,43 @@ async function updateUserSubscriptionMetadata(subscriptionID: string, metadata: 
         handleStripeError(error as Stripe.errors.StripeError);
     }
 }
+
+/**
+ * Retrieves the product metadata associated with a given subscription ID.
+ * 
+ * @param {string} subscriptionId - The ID of the subscription.
+ * @returns {Promise<Stripe.Metadata | null>} - A promise that resolves to the product metadata or null if not found.
+ * @throws {Error} - Throws an error if there's an issue retrieving the product metadata.
+ */
+async function getProductMetadataFromSubscription(subscriptionId: string): Promise<Stripe.Metadata | null> {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['items.data.price.product'],
+      });
+  
+      const subscriptionItem = subscription.items.data[0];
+  
+      if (!subscriptionItem || !subscriptionItem.price) {
+        console.error('No associated product found for the subscription.');
+        return null;
+      }
+  
+      const product = subscriptionItem.price.product;
+  
+      // Ensure product is neither a string nor a DeletedProduct
+      if (typeof product === 'string' || 'deleted' in product) {
+        console.error('The product is either deleted or not a valid object.');
+        return null;
+      }
+  
+      // Access the metadata from the product directly
+      return product.metadata;
+  
+    } catch (error) {
+      console.error("Error fetching product metadata:", error);
+      return null;
+    }
+  }
 
 /**
  * Updates a customer's subscription to a new plan. Deletes the old one plan and adds the new one to the subscription.
@@ -229,5 +265,6 @@ export {
     changeSubscriptionPlan,
     updateSubscriptionPlan,
     cancelUserSubscription,
-    getSubscriptionPeriod
+    getSubscriptionPeriod,
+    getProductMetadataFromSubscription
 }

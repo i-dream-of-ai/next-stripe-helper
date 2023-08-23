@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.updateSubscriptionPlan = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserCurrentPlan = exports.createSubscription = void 0;
+exports.getProductMetadataFromSubscription = exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.updateSubscriptionPlan = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserCurrentPlan = exports.createSubscription = void 0;
 const stripe_1 = require("../utils/stripe");
 /**
  * Create a new subscription for a customer.
@@ -102,6 +102,38 @@ async function updateUserSubscriptionMetadata(subscriptionID, metadata) {
     }
 }
 exports.updateUserSubscriptionMetadata = updateUserSubscriptionMetadata;
+/**
+ * Retrieves the product metadata associated with a given subscription ID.
+ *
+ * @param {string} subscriptionId - The ID of the subscription.
+ * @returns {Promise<Stripe.Metadata | null>} - A promise that resolves to the product metadata or null if not found.
+ * @throws {Error} - Throws an error if there's an issue retrieving the product metadata.
+ */
+async function getProductMetadataFromSubscription(subscriptionId) {
+    try {
+        const subscription = await stripe_1.stripe.subscriptions.retrieve(subscriptionId, {
+            expand: ['items.data.price.product'],
+        });
+        const subscriptionItem = subscription.items.data[0];
+        if (!subscriptionItem || !subscriptionItem.price) {
+            console.error('No associated product found for the subscription.');
+            return null;
+        }
+        const product = subscriptionItem.price.product;
+        // Ensure product is neither a string nor a DeletedProduct
+        if (typeof product === 'string' || 'deleted' in product) {
+            console.error('The product is either deleted or not a valid object.');
+            return null;
+        }
+        // Access the metadata from the product directly
+        return product.metadata;
+    }
+    catch (error) {
+        console.error("Error fetching product metadata:", error);
+        return null;
+    }
+}
+exports.getProductMetadataFromSubscription = getProductMetadataFromSubscription;
 /**
  * Updates a customer's subscription to a new plan. Deletes the old one plan and adds the new one to the subscription.
  *

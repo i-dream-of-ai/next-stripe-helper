@@ -305,14 +305,14 @@ This will use the current payment method by default.
 Customer must have an existing subscription.
 
 ```javascript
-const subscriptionDetails = await changeSubscriptionPlan('subscription_id', 'old_plan_id', 'new_plan_id')
+const subscriptionDetails = await changeSubscriptionPlan('subscription_id', 'item_id', 'new_price_id')
 ```
 
 Parameters:
 
-- `subscriptionID` (required): The Stripe ID of the existing subscription.
-- `new_plan_id` (required): The Stripe plan ID of the old plan (price_id).
-- `new_plan_id` (required): The Stripe plan ID of the new plan (price_id).
+- `subscriptionID` (required): The Stripe subscription ID of the existing subscription.
+- `item_id` (required): The Stripe Item ID of the plan.
+- `new_price_id` (required): The Stripe Price ID of the new plan (price_id).
 
 
 ### Get Detailed Information About a Subscription

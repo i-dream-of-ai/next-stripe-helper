@@ -25,6 +25,14 @@ declare function updateUserSubscriptionMetadata(subscriptionID: string, metadata
     [key: string]: string;
 }): Promise<Stripe.Subscription>;
 /**
+ * Retrieves the product metadata associated with a given subscription ID.
+ *
+ * @param {string} subscriptionId - The ID of the subscription.
+ * @returns {Promise<Stripe.Metadata | null>} - A promise that resolves to the product metadata or null if not found.
+ * @throws {Error} - Throws an error if there's an issue retrieving the product metadata.
+ */
+declare function getProductMetadataFromSubscription(subscriptionId: string): Promise<Stripe.Metadata | null>;
+/**
  * Updates a customer's subscription to a new plan. Deletes the old one plan and adds the new one to the subscription.
  *
  *
@@ -63,4 +71,4 @@ declare function getSubscriptionPeriod(subscriptionId: string): Promise<{
     start: Date;
     end: Date;
 }>;
-export { createSubscription, getUserCurrentPlan, getUserSubscription, getUserSubscriptions, getUserSubscriptionDetails, updateUserSubscriptionMetadata, listUserSubscriptions, changeSubscriptionPlan, updateSubscriptionPlan, cancelUserSubscription, getSubscriptionPeriod };
+export { createSubscription, getUserCurrentPlan, getUserSubscription, getUserSubscriptions, getUserSubscriptionDetails, updateUserSubscriptionMetadata, listUserSubscriptions, changeSubscriptionPlan, updateSubscriptionPlan, cancelUserSubscription, getSubscriptionPeriod, getProductMetadataFromSubscription };
