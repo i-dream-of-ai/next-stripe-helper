@@ -48,27 +48,28 @@ import { createCheckoutSession, createCheckoutSessionForSavingCard } from 'next-
 
 ### Create Checkout Session
 
-   Create a checkout session with Stripe.
+Create a checkout session with Stripe.
 
-   ```javascript
-   const session = await createCheckoutSession(
-       'https://your-success-url.com',
-       'https://your-cancel-url.com',
-       itemsArray,  // Your array of line items
-       'subscription',
-       'customer_id',
-       {}  // Additional optional parameters
-   );
-   ```
+```javascript
+   const session = await createCheckoutSession({
+        success_url: 'https://example.com/success',
+        cancel_url: 'https://example.com/canceled',
+        line_items: [
+            {price: 'price_idhere', quantity: 1},
+        ],
+        mode: 'subscription',
+        additionalParams: {}
+    });
+```
 
    Parameters:
 
-   - `successUrl` (required): The URL to redirect upon successful payment.
-   - `cancelUrl` (optional, default `""`): The URL to redirect upon payment cancellation.
-   - `itemsArray` (required): An array of line items for the checkout.
+   - `success_url` (required): The URL to redirect upon successful payment.
+   - `cancel_url` (optional, default `""`): The URL to redirect upon payment cancellation.
+   - `line_items` (required unless setup mode): An array of line items for the checkout.
    - `mode` (optional, default `subscription`): The mode of the checkout session (`subscription` or `payment`).
-   - `customerId` (required): The Stripe customer ID.
-   - `additionalParams` (optional, default `{}`): Any other additional parameters.
+   - `customer` (required): The Stripe customer ID.
+   - `additionalParams` (optional): Additional parameters can be found in the stripe api docs.
 
 ### Create Checkout Session for Saving Card
 

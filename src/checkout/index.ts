@@ -1,21 +1,59 @@
 import { Stripe } from 'stripe';
 import { handleStripeError, stripe } from '../utils/stripe';
 
+interface CheckoutSessionOptions {
+  success_url: string;
+  cancel_url?: string;
+  line_items?: Stripe.Checkout.SessionCreateParams.LineItem[];
+  mode?: 'subscription' | 'payment';
+  customer: string;
+  additionalParams?: Partial<Stripe.Checkout.SessionCreateParams>;
+}
+
 /**
- * Create a checkout session in Stripe for making purchases or setting up subscriptions.
+ * Create a checkout session with Stripe.
  * 
- * @param options - The options for creating the checkout session.
- * @returns A promise that resolves to the created checkout session or `undefined` if an error occurs.
- * @throws {Stripe.errors.StripeError} If there's an error during session creation.
+ * @param {Object} options - The options for creating the checkout session.
+ * @param {string} options.success_url - The URL to redirect upon successful payment. (required)
+ * @param {string} [options.cancel_url=""] - The URL to redirect upon payment cancellation. (optional, default `""`)
+ * @param {Object[]} options.line_items - An array of line items for the checkout. (required unless setup mode)
+ * @param {string} [options.mode="subscription"] - The mode of the checkout session (`subscription` or `payment`). (optional, default `subscription`)
+ * @param {string} options.customer - The Stripe customer ID. (required)
+ * @param {Object} [options.additionalParams] - Additional parameters can be found in the stripe api docs. (optional)
+ * 
+ * @returns {Promise<Stripe.Checkout.Session | undefined>} - A promise that resolves to the created checkout session or `undefined` if an error occurs.
+ * @throws {Stripe.errors.StripeError} - If there's an error during session creation.
  */
-const createCheckoutSession = async (options: Stripe.Checkout.SessionCreateParams): Promise<Stripe.Checkout.Session | undefined> => {
+const createCheckoutSession = async (options: CheckoutSessionOptions): Promise<Stripe.Checkout.Session | undefined> => {
+  const {
+      success_url,
+      cancel_url = "",
+      line_items,
+      mode = 'subscription',
+      customer,
+      additionalParams = {}
+  } = options;
+
   try {
-    const session = await stripe.checkout.sessions.create(options);
-    return session;
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
+          success_url,
+          cancel_url,
+          mode,
+          customer,
+          ...additionalParams
+      };
+
+      if (line_items) {
+          sessionParams.line_items = line_items;
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      return session;
   } catch (error) {
-    handleStripeError(error as Stripe.errors.StripeError);
+      handleStripeError(error as Stripe.errors.StripeError);
   }
 }
+
 
 /**
  * Create a checkout session in Stripe specifically for saving a customer's card information.
