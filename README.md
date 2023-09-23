@@ -68,7 +68,7 @@ Create a checkout session with Stripe.
    - `cancel_url` (optional, default `""`): The URL to redirect upon payment cancellation.
    - `line_items` (required unless setup mode): An array of line items for the checkout.
    - `mode` (optional, default `subscription`): The mode of the checkout session (`subscription` or `payment`).
-   - `customer` (required): The Stripe customer ID.
+   - `customer` (optional): The Stripe customer ID. A new Customer will be created if no ID is provided.
    - `additionalParams` (optional): Additional parameters can be found in the stripe api docs.
 
 ### Create Checkout Session for Saving Card
