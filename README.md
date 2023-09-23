@@ -58,6 +58,7 @@ Create a checkout session with Stripe.
             {price: 'price_idhere', quantity: 1},
         ],
         mode: 'subscription',
+        client_reference_id: 'your_user_id',
         additionalParams: {}
     });
 ```
@@ -69,6 +70,7 @@ Create a checkout session with Stripe.
    - `line_items` (required unless setup mode): An array of line items for the checkout.
    - `mode` (optional, default `subscription`): The mode of the checkout session (`subscription` or `payment`).
    - `customer` (optional): The Stripe customer ID. A new Customer will be created if no ID is provided.
+   - `client_reference_id` (optional): Your User ID. This ID is from your own DB, and is returned via webhook so you can use it to track the session and user in your app.
    - `additionalParams` (optional): Additional parameters can be found in the stripe api docs.
 
 ### Create Checkout Session for Saving Card

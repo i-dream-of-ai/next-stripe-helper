@@ -10,20 +10,22 @@ const stripe_1 = require("../utils/stripe");
  * @param {string} [options.cancel_url=""] - The URL to redirect upon payment cancellation. (optional, default `""`)
  * @param {Object[]} options.line_items - An array of line items for the checkout. (required unless setup mode)
  * @param {string} [options.mode="subscription"] - The mode of the checkout session (`subscription` or `payment`). (optional, default `subscription`)
- * @param {string} options.customer - The Stripe customer ID. (required)
+ * @param {string} options.customer - The Stripe customer ID. (optional)
+ * @param {string} options.client_reference_id - Your local User ID. Used to track the session to the user in your app. (optional)
  * @param {Object} [options.additionalParams] - Additional parameters can be found in the stripe api docs. (optional)
  *
  * @returns {Promise<Stripe.Checkout.Session | undefined>} - A promise that resolves to the created checkout session or `undefined` if an error occurs.
  * @throws {Stripe.errors.StripeError} - If there's an error during session creation.
  */
 const createCheckoutSession = async (options) => {
-    const { success_url, cancel_url = "", line_items, mode = 'subscription', customer, additionalParams = {} } = options;
+    const { success_url, cancel_url = "", line_items, mode = 'subscription', customer, client_reference_id, additionalParams = {} } = options;
     try {
         const sessionParams = {
             success_url,
             cancel_url,
             mode,
             customer,
+            client_reference_id,
             ...additionalParams
         };
         if (line_items) {

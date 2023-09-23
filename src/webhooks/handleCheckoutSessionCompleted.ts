@@ -2,11 +2,11 @@ import Stripe from 'stripe';
 import { stripe } from '../utils/stripe';
 
 export interface ManageSubscriptionChangeFunction {
-    (subscriptionId: string, customerId: string, isCreated: boolean): Promise<void>;
+    (subscriptionId: string, customerId: string, client_reference_id: string | null, isCreated: boolean): Promise<void>;
 }
 
 export interface ManageCustomerDetailsChangeFunction {
-    (customerId: string, paymentMethodId: string | Stripe.PaymentMethod | null): Promise<void>;
+    (customerId: string, paymentMethodId: string | Stripe.PaymentMethod | null, client_reference_id: string | null): Promise<void>;
 }
 
 export async function handleCheckoutSessionCompleted(
@@ -14,6 +14,7 @@ export async function handleCheckoutSessionCompleted(
     manageSubscriptionChange: ManageSubscriptionChangeFunction,
     manageCustomerDetailsChange: ManageCustomerDetailsChangeFunction
 ): Promise<void> {
+    const client_reference_id = checkoutSession.client_reference_id;
     if (checkoutSession.mode === 'subscription') {
         const subscriptionId = checkoutSession.subscription as string;
         if (checkoutSession.customer !== null) {
@@ -23,6 +24,7 @@ export async function handleCheckoutSessionCompleted(
             await manageSubscriptionChange(
                 subscriptionId,
                 customerId,
+                client_reference_id,
                 true
             );
         } else {
@@ -53,6 +55,7 @@ export async function handleCheckoutSessionCompleted(
                 await manageCustomerDetailsChange(
                     checkoutSession.customer as string,
                     paymentMethodId,
+                    client_reference_id
                 );
             }
         } catch (error) {

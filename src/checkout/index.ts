@@ -7,6 +7,7 @@ interface CheckoutSessionOptions {
   line_items?: Stripe.Checkout.SessionCreateParams.LineItem[];
   mode?: 'subscription' | 'payment';
   customer: string;
+  client_reference_id: string,
   additionalParams?: Partial<Stripe.Checkout.SessionCreateParams>;
 }
 
@@ -18,7 +19,8 @@ interface CheckoutSessionOptions {
  * @param {string} [options.cancel_url=""] - The URL to redirect upon payment cancellation. (optional, default `""`)
  * @param {Object[]} options.line_items - An array of line items for the checkout. (required unless setup mode)
  * @param {string} [options.mode="subscription"] - The mode of the checkout session (`subscription` or `payment`). (optional, default `subscription`)
- * @param {string} options.customer - The Stripe customer ID. (required)
+ * @param {string} options.customer - The Stripe customer ID. (optional)
+ * @param {string} options.client_reference_id - Your local User ID. Used to track the session to the user in your app. (optional)
  * @param {Object} [options.additionalParams] - Additional parameters can be found in the stripe api docs. (optional)
  * 
  * @returns {Promise<Stripe.Checkout.Session | undefined>} - A promise that resolves to the created checkout session or `undefined` if an error occurs.
@@ -31,6 +33,7 @@ const createCheckoutSession = async (options: CheckoutSessionOptions): Promise<S
       line_items,
       mode = 'subscription',
       customer,
+      client_reference_id,
       additionalParams = {}
   } = options;
 
@@ -40,6 +43,7 @@ const createCheckoutSession = async (options: CheckoutSessionOptions): Promise<S
           cancel_url,
           mode,
           customer,
+          client_reference_id,
           ...additionalParams
       };
 

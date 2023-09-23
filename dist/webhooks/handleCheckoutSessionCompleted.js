@@ -3,13 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleCheckoutSessionCompleted = void 0;
 const stripe_1 = require("../utils/stripe");
 async function handleCheckoutSessionCompleted(checkoutSession, manageSubscriptionChange, manageCustomerDetailsChange) {
+    const client_reference_id = checkoutSession.client_reference_id;
     if (checkoutSession.mode === 'subscription') {
         const subscriptionId = checkoutSession.subscription;
         if (checkoutSession.customer !== null) {
             const customerId = typeof checkoutSession.customer === 'string'
                 ? checkoutSession.customer
                 : checkoutSession.customer.id; // Assuming checkoutSession.customer is a Customer object
-            await manageSubscriptionChange(subscriptionId, customerId, true);
+            await manageSubscriptionChange(subscriptionId, customerId, client_reference_id, true);
         }
         else {
             console.error('Error: Customer ID is null on subscription->manageSubscriptionChange');
@@ -32,7 +33,7 @@ async function handleCheckoutSessionCompleted(checkoutSession, manageSubscriptio
                         default_payment_method: paymentMethodId,
                     },
                 });
-                await manageCustomerDetailsChange(checkoutSession.customer, paymentMethodId);
+                await manageCustomerDetailsChange(checkoutSession.customer, paymentMethodId, client_reference_id);
             }
         }
         catch (error) {

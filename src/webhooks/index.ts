@@ -79,26 +79,29 @@ export const webhookHandler = async (
                 case 'customer.subscription.updated':
                 case 'customer.subscription.deleted':
                     const subscription = stripeEvent.data.object as Stripe.Subscription;
-                    
                     if (typeof subscription.customer === 'string') {
                         await manageSubscriptionChange(
                             subscription.id,
                             subscription.customer,
+                            null,
                             stripeEvent.type === 'customer.subscription.created'
                         );
                         await manageCustomerDetailsChange(
                             subscription.customer,
                             subscription.default_payment_method,
+                            null
                         );
                     } else if (subscription.customer && 'id' in subscription.customer) {
                         await manageSubscriptionChange(
                             subscription.id,
                             subscription.customer.id,
+                            null,
                             stripeEvent.type === 'customer.subscription.created'
                         );
                         await manageCustomerDetailsChange(
                             subscription.customer.id,
                             subscription.default_payment_method,
+                            null
                         );
                     } else {
                         console.error('Error: Customer ID is not a string or Customer object on subscription deletion');
