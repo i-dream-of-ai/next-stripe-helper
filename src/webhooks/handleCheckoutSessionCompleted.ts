@@ -38,29 +38,32 @@ export async function handleCheckoutSessionCompleted(
             const setupIntent = await stripe.setupIntents.retrieve(
                 checkoutSession.setup_intent as string
             );
-
-            if (setupIntent.payment_method) {
-                // Assuming payment_method is either a string or a PaymentMethod object,
-                // we check its type and handle accordingly.
-                const paymentMethodId = typeof setupIntent.payment_method === 'string'
-                    ? setupIntent.payment_method
-                    : setupIntent.payment_method.id;
-
-                // Set the payment method as the default for the customer
-                await stripe.customers.update(checkoutSession.customer as string, {
-                    invoice_settings: {
-                        default_payment_method: paymentMethodId,
-                    },
-                });
-                await manageCustomerDetailsChange(
-                    checkoutSession.customer as string,
-                    paymentMethodId,
-                    client_reference_id
-                );
+    
+            // Ensure the customer ID and payment method are valid
+            if (!checkoutSession.customer || typeof checkoutSession.customer !== 'string') {
+                throw new Error('Invalid customer ID');
             }
+    
+            if (!setupIntent.payment_method || typeof setupIntent.payment_method !== 'string') {
+                throw new Error('Invalid payment method ID');
+            }
+    
+            // Set the payment method as the default for the customer
+            await stripe.customers.update(checkoutSession.customer, {
+                invoice_settings: {
+                    default_payment_method: setupIntent.payment_method,
+                },
+            });
+    
+            await manageCustomerDetailsChange(
+                checkoutSession.customer,
+                setupIntent.payment_method,
+                client_reference_id
+            );
         } catch (error) {
             console.error("Failed to update customer's default payment method:", error);
             throw new Error('Failed to set default payment method.');
         }
+    
     }
 }
