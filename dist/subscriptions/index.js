@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProductMetadataFromSubscription = exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.updateSubscriptionPlan = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserCurrentPlan = exports.createSubscription = void 0;
+exports.getProductMetadataFromSubscription = exports.getSubscriptionPeriod = exports.cancelUserSubscription = exports.updateSubscriptionPlan = exports.changeSubscriptionPlan = exports.listUserSubscriptions = exports.updateUserSubscriptionMetadata = exports.getUserSubscriptionDetails = exports.getUserSubscriptions = exports.getUserSubscription = exports.getUserFirstActivePlan = exports.createSubscription = void 0;
 const stripe_1 = require("../utils/stripe");
 /**
  * Create a new subscription for a customer.
@@ -62,21 +62,29 @@ async function getUserSubscriptionDetails(subscriptionID) {
     }
 }
 exports.getUserSubscriptionDetails = getUserSubscriptionDetails;
-async function getUserCurrentPlan(customerId) {
+/**
+ * Retrieves the first active plan for a given customer.
+ *
+ * @param {string} customerId - The ID of the customer.
+ * @returns {Promise<{ subscription: Stripe.Subscription | null, plan: Stripe.Plan | null }>}
+ * - A promise that resolves to an object containing the subscription and plan, or null if no active plan is found.
+ * @throws {Error} - Throws an error if there's a problem communicating with the Stripe API or if the customer ID is invalid.
+ */
+async function getUserFirstActivePlan(customerId) {
     try {
-        // Retrieve the customer's subscriptions
+        // Retrieve the customer's active subscriptions
         const subscriptions = await stripe_1.stripe.subscriptions.list({
             customer: customerId,
+            status: 'active'
         });
         if (subscriptions.data.length === 0) {
-            console.log('Customer has no subscriptions: ', customerId);
+            console.log('Customer has no active subscriptions: ', customerId);
             return {
                 subscription: null,
                 plan: null
-            }; // Customer has no subscriptions
+            }; // Customer has no active subscriptions
         }
-        // Assuming the customer only has one subscription.
-        // If a customer can have multiple subscriptions, you'll want to loop over these.
+        // Assuming the first active subscription is the one you're interested in.
         const subscription = subscriptions.data[0];
         // Retrieve the plan from the subscription's items
         const plan = subscription.items.data[0].plan;
@@ -86,11 +94,11 @@ async function getUserCurrentPlan(customerId) {
         };
     }
     catch (error) {
-        console.error("Error fetching plan for user:", error);
+        console.error("Error fetching active plan for user:", error);
         throw error;
     }
 }
-exports.getUserCurrentPlan = getUserCurrentPlan;
+exports.getUserFirstActivePlan = getUserFirstActivePlan;
 async function updateUserSubscriptionMetadata(subscriptionID, metadata) {
     try {
         return await stripe_1.stripe.subscriptions.update(subscriptionID, {

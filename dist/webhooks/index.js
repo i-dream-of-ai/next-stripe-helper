@@ -2,7 +2,19 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.webhookHandler = void 0;
 const stripe_1 = require("../utils/stripe");
-const webhookHandler = async (upsertProduct, upsertPrice, manageSubscriptionChange, event) => {
+const handleCheckoutSessionCompleted_1 = require("./handleCheckoutSessionCompleted");
+/**
+ * Handles incoming webhook events from Stripe.
+ *
+ * @param {UpsertProductFunction} upsertProduct - Function to upsert a product.
+ * @param {UpsertPriceFunction} upsertPrice - Function to upsert a price.
+ * @param {ManageSubscriptionChangeFunction} manageSubscriptionChange - Function to manage subscription changes.
+ * @param {ManageCustomerDetailsChangeFunction} manageCustomerDetailsChange - Function to manage customer details changes.
+ * @param {WebhookEvent} event - The webhook event object containing the body and signature.
+ * @returns {Promise<{ received: boolean, message?: string }>} - A promise that resolves to an object indicating whether the event was received and an optional message.
+ * @throws {Error} - Throws an error if there's an issue processing the webhook event.
+ */
+const webhookHandler = async (upsertProduct, upsertPrice, manageSubscriptionChange, manageCustomerDetailsChange, event) => {
     const { body, signature } = event;
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_LIVE ?? process.env.STRIPE_WEBHOOK_SECRET;
     let stripeEvent;
@@ -44,37 +56,20 @@ const webhookHandler = async (upsertProduct, upsertPrice, manageSubscriptionChan
                 case 'customer.subscription.updated':
                 case 'customer.subscription.deleted':
                     const subscription = stripeEvent.data.object;
-                    await manageSubscriptionChange(subscription.id, subscription.customer, stripeEvent.type === 'customer.subscription.created');
-                    break;
+                    if (typeof subscription.customer === 'string') {
+                        await manageSubscriptionChange(subscription.id, subscription.customer, stripeEvent.type === 'customer.subscription.created');
+                        await manageCustomerDetailsChange(subscription.customer, subscription.default_payment_method);
+                    }
+                    else if (subscription.customer && 'id' in subscription.customer) {
+                        await manageSubscriptionChange(subscription.id, subscription.customer.id, stripeEvent.type === 'customer.subscription.created');
+                        await manageCustomerDetailsChange(subscription.customer.id, subscription.default_payment_method);
+                    }
+                    else {
+                        console.error('Error: Customer ID is not a string or Customer object on subscription deletion');
+                        throw new Error('Error: Customer ID is not a string or Customer object on subscription deletion');
+                    }
                 case 'checkout.session.completed':
-                    const checkoutSession = stripeEvent.data.object;
-                    if (checkoutSession.mode === 'subscription') {
-                        const subscriptionId = checkoutSession.subscription;
-                        await manageSubscriptionChange(subscriptionId, checkoutSession.customer, true);
-                    }
-                    if (checkoutSession.mode === 'setup') {
-                        try {
-                            // Retrieve the setup intent
-                            const setupIntent = await stripe_1.stripe.setupIntents.retrieve(checkoutSession.setup_intent);
-                            if (setupIntent.payment_method) {
-                                // Assuming payment_method is either a string or a PaymentMethod object,
-                                // we check its type and handle accordingly.
-                                const paymentMethodId = typeof setupIntent.payment_method === 'string'
-                                    ? setupIntent.payment_method
-                                    : setupIntent.payment_method.id;
-                                // Set the payment method as the default for the customer
-                                await stripe_1.stripe.customers.update(checkoutSession.customer, {
-                                    invoice_settings: {
-                                        default_payment_method: paymentMethodId,
-                                    },
-                                });
-                            }
-                        }
-                        catch (error) {
-                            console.error("Failed to update customer's default payment method:", error);
-                            throw new Error('Failed to set default payment method.');
-                        }
-                    }
+                    await (0, handleCheckoutSessionCompleted_1.handleCheckoutSessionCompleted)(stripeEvent.data.object, manageSubscriptionChange, manageCustomerDetailsChange);
                     break;
                 default:
                     throw new Error('Unhandled relevant event!');

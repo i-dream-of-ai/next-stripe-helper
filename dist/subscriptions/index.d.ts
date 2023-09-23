@@ -1,4 +1,8 @@
 import Stripe from "stripe";
+interface UserSubscriptionDetails {
+    status: string;
+    [key: string]: string;
+}
 /**
  * Create a new subscription for a customer.
  *
@@ -9,17 +13,18 @@ import Stripe from "stripe";
 declare function createSubscription(customerId: string, priceId: string): Promise<Stripe.Subscription>;
 declare function getUserSubscriptions(customerId: string): Promise<Stripe.Response<Stripe.ApiList<Stripe.Subscription>> | null>;
 declare function getUserSubscription(subscriptionID: string): Promise<Stripe.Subscription>;
-interface UserSubscriptionDetails {
-    status: string;
-    [key: string]: string;
-}
 declare function getUserSubscriptionDetails(subscriptionID: string): Promise<UserSubscriptionDetails>;
-declare function getUserCurrentPlan(customerId: string): Promise<{
-    subscription: null;
-    plan: null;
-} | {
-    subscription: Stripe.Subscription;
-    plan: Stripe.Plan;
+/**
+ * Retrieves the first active plan for a given customer.
+ *
+ * @param {string} customerId - The ID of the customer.
+ * @returns {Promise<{ subscription: Stripe.Subscription | null, plan: Stripe.Plan | null }>}
+ * - A promise that resolves to an object containing the subscription and plan, or null if no active plan is found.
+ * @throws {Error} - Throws an error if there's a problem communicating with the Stripe API or if the customer ID is invalid.
+ */
+declare function getUserFirstActivePlan(customerId: string): Promise<{
+    subscription: Stripe.Subscription | null;
+    plan: Stripe.Plan | null;
 }>;
 declare function updateUserSubscriptionMetadata(subscriptionID: string, metadata: {
     [key: string]: string;
@@ -71,4 +76,4 @@ declare function getSubscriptionPeriod(subscriptionId: string): Promise<{
     start: Date;
     end: Date;
 }>;
-export { createSubscription, getUserCurrentPlan, getUserSubscription, getUserSubscriptions, getUserSubscriptionDetails, updateUserSubscriptionMetadata, listUserSubscriptions, changeSubscriptionPlan, updateSubscriptionPlan, cancelUserSubscription, getSubscriptionPeriod, getProductMetadataFromSubscription };
+export { createSubscription, getUserFirstActivePlan, getUserSubscription, getUserSubscriptions, getUserSubscriptionDetails, updateUserSubscriptionMetadata, listUserSubscriptions, changeSubscriptionPlan, updateSubscriptionPlan, cancelUserSubscription, getSubscriptionPeriod, getProductMetadataFromSubscription };
