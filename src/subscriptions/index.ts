@@ -1,6 +1,11 @@
 import Stripe from "stripe";
 import { handleStripeError, stripe } from "../utils/stripe";
 
+interface UserSubscriptionDetails {
+    status: string;
+    [key: string]: string;
+}
+
 /**
  * Create a new subscription for a customer.
  * 
@@ -43,11 +48,6 @@ async function getUserSubscription(subscriptionID: string): Promise<Stripe.Subsc
     }
 }
 
-interface UserSubscriptionDetails {
-    status: string;
-    [key: string]: string;
-}
-
 async function getUserSubscriptionDetails(subscriptionID: string): Promise<UserSubscriptionDetails> {
     try {
         const subscription = await getUserSubscription(subscriptionID);
@@ -66,38 +66,47 @@ async function getUserSubscriptionDetails(subscriptionID: string): Promise<UserS
     }
 }
 
-async function getUserCurrentPlan(customerId:string) {
+/**
+ * Retrieves the first active plan for a given customer.
+ * 
+ * @param {string} customerId - The ID of the customer.
+ * @returns {Promise<{ subscription: Stripe.Subscription | null, plan: Stripe.Plan | null }>} 
+ * - A promise that resolves to an object containing the subscription and plan, or null if no active plan is found.
+ * @throws {Error} - Throws an error if there's a problem communicating with the Stripe API or if the customer ID is invalid.
+ */
+async function getUserFirstActivePlan(customerId: string): Promise<{ subscription: Stripe.Subscription | null, plan: Stripe.Plan | null }> {
     try {
-        // Retrieve the customer's subscriptions
+        // Retrieve the customer's active subscriptions
         const subscriptions = await stripe.subscriptions.list({
             customer: customerId,
+            status: 'active'
         });
     
         if (subscriptions.data.length === 0) {
-            console.log('Customer has no subscriptions: ',customerId)
+            console.log('Customer has no active subscriptions: ', customerId);
             return {
-                subscription:null, 
-                plan:null
-            };// Customer has no subscriptions
+                subscription: null, 
+                plan: null
+            }; // Customer has no active subscriptions
         }
     
-        // Assuming the customer only has one subscription.
-        // If a customer can have multiple subscriptions, you'll want to loop over these.
+        // Assuming the first active subscription is the one you're interested in.
         const subscription = subscriptions.data[0];
         
         // Retrieve the plan from the subscription's items
         const plan = subscription.items.data[0].plan;
   
         return {
-            subscription:subscription, 
-            plan:plan
+            subscription: subscription, 
+            plan: plan
         };
   
     } catch (error) {
-      console.error("Error fetching plan for user:", error);
+      console.error("Error fetching active plan for user:", error);
       throw error;
     }
 }
+
 
 async function updateUserSubscriptionMetadata(subscriptionID: string, metadata: { [key: string]: string }): Promise<Stripe.Subscription> {
     try {
@@ -256,7 +265,7 @@ async function getSubscriptionPeriod(subscriptionId: string): Promise<{ start: D
 
 export {
     createSubscription,
-    getUserCurrentPlan,
+    getUserFirstActivePlan,
     getUserSubscription,
     getUserSubscriptions,
     getUserSubscriptionDetails,
