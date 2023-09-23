@@ -18,7 +18,7 @@ Ensure you've set up Stripe and have an error handler in your project, as this u
 
 You will likely want to start in TEST MODE!! Make sure you use the test mode switch to turn Test Mode on before proceeding. Once you are setup and ready to take live payments, turn off test mode, get your LIVE stripe keys, and setup your LIVE webhooks secret and endpoint.
 
-Ensure you have set the `STRIPE_SECRET_LIVE` or `STRIPE_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). With Next.js, you can access these environment variables using `process.env`.
+Ensure you have set the `STRIPE_SECRET_LIVE` or `STRIPE_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files).
 
 Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). 
 
@@ -383,9 +383,13 @@ Returns:
 
 ## Webhook Handler with Next.js
 
-In the Next.js environment, API routes provide a solution to build your backend functionality. The `next-stripe-helper` comes equipped with a webhook handler specifically designed for easy integration with Next.js API routes.
+In the Next.js 13 environment, API routes provide a solution to build your backend functionality. The `next-stripe-helper` comes equipped with a webhook handler specifically designed for easy integration with Next.js API routes.
 
-If you add the webhookHandler to an api route, your Database will automatically stay in sync with Stripe Products, Prices, and Subscriptions.
+If you add the webhookHandler to an api route, your Database can automatically stay in sync with Stripe Products, Prices, and Subscriptions.
+
+First create your DB functions (upsertProductRecord, upsertPriceRecord, manageSubscriptionStatusChange, manageCustomerDetailsChange), then use them with the webhookHandler function in an api endpoint. 
+
+You can find example functions below that use MongoDb, but it can be used with any DB type.
 
 ### Usage
 
@@ -401,7 +405,7 @@ Then, set up an API route in Next.js to handle the Stripe webhook:
 // pages/api/stripe/webhook/route.js
 
 import { webhookHandler } from 'next-stripe-helper';
-import { manageSubscriptionStatusChange, upsertPriceRecord, upsertProductRecord } from '@/lib/stripe';
+import { manageSubscriptionStatusChange, manageCustomerDetailsChange, upsertPriceRecord, upsertProductRecord } from '@/lib/stripe';
 import { headers } from "next/headers"
 
 export async function POST(req) {
@@ -417,6 +421,7 @@ export async function POST(req) {
             upsertProductRecord, 
             upsertPriceRecord, 
             manageSubscriptionStatusChange, 
+            manageCustomerDetailsChange,
             { body, signature }
         );
 
@@ -430,14 +435,16 @@ export async function POST(req) {
 
 ```
 
-Here's an example of Stripe Helper Functions for a MongoDB Database.
+Examples of Webhook functions you could use with a MongoDB Database.
 
 ``` javascript
-import clientPromise from '@/lib/mongodb'
-import { ObjectId } from 'mongodb'
+import clientPromise from '@/lib/mongodb'; //assuming you have a funciton to get your clientPromise for your DB.
+import { ObjectId } from 'mongodb';
 
-const dbName = process.env.MONGODB_DB
+const dbName = process.env.MONGODB_DB; //assuming you are using the db name.
 
+
+//this will GET the active Stripe products and related Prices in your DB
 export const getActiveProductsWithPrices = async () => {
     try {
         const client = await clientPromise
@@ -465,6 +472,7 @@ export const getActiveProductsWithPrices = async () => {
     }
 }
 
+//this will GET the active Stripe products in your DB
 export const getActiveApiProductsWithPrices = async () => {
     try {
         const client = await clientPromise
@@ -498,7 +506,7 @@ export const getActiveApiProductsWithPrices = async () => {
     }
 }
 
-
+//this will keep the active Stripe products updated in your DB
 export const upsertProductRecord = async (product) => {
     const productData = {
         _id: product.id,
@@ -523,6 +531,7 @@ export const upsertProductRecord = async (product) => {
     }
 }
 
+//this will keep the active Stripe prices updated in your DB
 export const upsertPriceRecord = async (price) => {
     const priceData = {
         _id: price.id,
@@ -552,6 +561,7 @@ export const upsertPriceRecord = async (price) => {
     }
 }
 
+//this will keep your user billing details updated in your DB
 const copyBillingDetailsToCustomer = async (uuid, payment_method) => {
     const customer = payment_method.customer
     const { name, phone, address } = payment_method.billing_details
@@ -574,6 +584,7 @@ const copyBillingDetailsToCustomer = async (uuid, payment_method) => {
     }
 }
 
+//this will keep the customer subscriptions updated in your DB
 export const manageSubscriptionStatusChange = async (
     subscriptionId,
     customerId,
@@ -631,8 +642,6 @@ export const manageSubscriptionStatusChange = async (
         quantity: item.quantity,
     }))
 
-    // console.log('subscriptionItems',subscriptionItems)
-
     const subscriptionData = {
         _id: subscription.id,
         user_id: new ObjectId(uuid),
@@ -672,8 +681,6 @@ export const manageSubscriptionStatusChange = async (
             { upsert: true }
         )
 
-    console.log('manageSubscriptionStatusChange: update: ', result)
-
     if (result.upsertedCount || result.modifiedCount) {
         console.log(
             `Inserted/updated subscription [${subscription.id}] for user [${uuid}]`
@@ -692,62 +699,31 @@ export const manageSubscriptionStatusChange = async (
         )
     }
 }
-```
 
-## Sync with Stripe
-
-## Syncing Stripe Products with Your Local Database
-
-To ensure that your local database reflects your current Stripe products, you can utilize the provided syncing utility. First create DB functions, then use them with the syncWithStripe function in an api endpoint. You can then create a simple button in your app that triggers the sync function.
-
-Note: If you add the webhookHandler shown above to an api route, your Database will automatically stay in sync with Stripe Products, Prices, and Subscriptions.
-
-### Integration Steps:
-
-1. **Add the Syncing Endpoint**:
-
-Set up an API route in your Next.js project that uses the sync utility:
-
-```javascript
-// pages/api/syncStripe.js
-import { syncWithStripe } from 'next-stripe-helper';
-
-const dbOperations = {
-    getAllLocalProducts: async () => { /* fetch all products from the DB */ },
-    addProduct: async (product) => { /* add new product to the DB */ },
-    updateProduct: async (product) => { /* update existing product in the DB */ },
-};
-
-export default async (req, res) => {
-    if (req.method === 'POST') {
-        const result = await syncWithStripe(dbOperations);
-
-        if (result.success) {
-            res.status(200).json({ message: result.message });
-        } else {
-            res.status(500).json({ error: result.error, details: result.details });
-        }
-    } else {
-        res.status(405).end(); // Method Not Allowed
-    }
-};
+//this will keep the customer id and thier paymentID updated in your DB
+export async function manageCustomerDetailsChange(
+  customerId: string,
+  defaultPaymentMethodId: string,
+) {
+  // Your code to update the user document in your database
+}
 ```
 
 ### Configuration
 
-1. **Environment Variables**: Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). With Next.js, you can access these environment variables using `process.env`.
+1. **Environment Variables**: Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). With Next.js, you can access these environment variables using `process.env`. Remember best practice is giving the api key the least amount of access needed.
 
 2. **Stripe Dashboard**: Configure your Stripe dashboard to send webhooks to `https://your-domain.com/api/stripe-webhook`.
 
 ### Important Notes
 
-- As with the general use-case, you need to provide the `upsertProduct`, `upsertPrice`, and `manageSubscriptionChange` callback functions. These functions will handle the various events as they occur on Stripe.
+- As with the general use-case, you need to provide the `upsertProduct`, `upsertPrice`, `manageSubscriptionChange`, and `manageCustomerDetailsChange` callback functions. These functions will handle the various events as they occur on Stripe.
   
 - Always handle errors gracefully. The provided webhook handler has built-in error handling, but you may want to extend or customize this for your specific needs.
 
 ### Deployment
 
-When deploying your Next.js application, make sure to include your Stripe webhook secret in your production environment variables or secrets management solution.
+When deploying your Next.js application, make sure to include your Stripe webhook secret in your production environment variables or secrets management solution. Never expose the secret or api keys.
 
 ## Error Handling
 
