@@ -5,8 +5,10 @@ export interface ManageSubscriptionChangeFunction {
     (subscriptionId: string, customerId: string, isCreated: boolean): Promise<void>;
 }
 
+export type EventType = 'created' | 'updated' | 'deleted';
+
 export interface ManageCustomerDetailsChangeFunction {
-    (customer: Stripe.Customer | Stripe.DeletedCustomer): Promise<void>;
+    (customer: Stripe.Customer | Stripe.DeletedCustomer, eventType: EventType): Promise<void>;
 }
 
 export async function handleCheckoutSessionCompleted(
@@ -53,7 +55,7 @@ export async function handleCheckoutSessionCompleted(
                 },
             });
     
-            await manageCustomerDetailsChange(customer);
+            await manageCustomerDetailsChange(customer, 'updated');
         } catch (error) {
             console.error("Failed to update customer's default payment method:", error);
             throw new Error('Failed to set default payment method.');

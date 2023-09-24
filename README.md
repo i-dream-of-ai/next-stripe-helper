@@ -770,6 +770,7 @@ All utility functions incorporate internal error handling. You can catch these e
 ## Contributing
 
 Feel free to contribute to the project by submitting a pull request or raising an issue.
+[Next Stripe Helper Repo](https://github.com/i-dream-of-ai/next-stripe-helper)
 
 ## License
 
