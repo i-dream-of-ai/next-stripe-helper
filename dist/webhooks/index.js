@@ -52,17 +52,21 @@ const webhookHandler = async (upsertProduct, upsertPrice, manageSubscriptionChan
                 case 'price.updated':
                     await upsertPrice(stripeEvent.data.object);
                     break;
+                case 'customer.created':
+                case 'customer.deleted':
+                case 'customer.updated':
+                    await manageCustomerDetailsChange(stripeEvent.data.object);
+                    break;
                 case 'customer.subscription.created':
                 case 'customer.subscription.updated':
                 case 'customer.subscription.deleted':
                     const subscription = stripeEvent.data.object;
                     if (typeof subscription.customer === 'string') {
-                        await manageSubscriptionChange(subscription.id, subscription.customer, null, stripeEvent.type === 'customer.subscription.created');
-                        await manageCustomerDetailsChange(subscription.customer, subscription.default_payment_method, null);
+                        await manageSubscriptionChange(subscription.id, subscription.customer, stripeEvent.type === 'customer.subscription.created');
                     }
                     else if (subscription.customer && 'id' in subscription.customer) {
-                        await manageSubscriptionChange(subscription.id, subscription.customer.id, null, stripeEvent.type === 'customer.subscription.created');
-                        await manageCustomerDetailsChange(subscription.customer.id, subscription.default_payment_method, null);
+                        await manageSubscriptionChange(subscription.id, subscription.customer.id, stripeEvent.type === 'customer.subscription.created');
+                        await manageCustomerDetailsChange(subscription.customer);
                     }
                     else {
                         console.error('Error: Customer ID is not a string or Customer object on subscription deletion');

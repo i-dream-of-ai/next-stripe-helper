@@ -3,14 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleCheckoutSessionCompleted = void 0;
 const stripe_1 = require("../utils/stripe");
 async function handleCheckoutSessionCompleted(checkoutSession, manageSubscriptionChange, manageCustomerDetailsChange) {
-    const client_reference_id = checkoutSession.client_reference_id;
     if (checkoutSession.mode === 'subscription') {
         const subscriptionId = checkoutSession.subscription;
         if (checkoutSession.customer !== null) {
             const customerId = typeof checkoutSession.customer === 'string'
                 ? checkoutSession.customer
                 : checkoutSession.customer.id; // Assuming checkoutSession.customer is a Customer object
-            await manageSubscriptionChange(subscriptionId, customerId, client_reference_id, true);
+            await manageSubscriptionChange(subscriptionId, customerId, true);
         }
         else {
             console.error('Error: Customer ID is null on subscription->manageSubscriptionChange');
@@ -29,12 +28,12 @@ async function handleCheckoutSessionCompleted(checkoutSession, manageSubscriptio
                 throw new Error('Invalid payment method ID');
             }
             // Set the payment method as the default for the customer
-            await stripe_1.stripe.customers.update(checkoutSession.customer, {
+            const customer = await stripe_1.stripe.customers.update(checkoutSession.customer, {
                 invoice_settings: {
                     default_payment_method: setupIntent.payment_method,
                 },
             });
-            await manageCustomerDetailsChange(checkoutSession.customer, setupIntent.payment_method, client_reference_id);
+            await manageCustomerDetailsChange(customer);
         }
         catch (error) {
             console.error("Failed to update customer's default payment method:", error);

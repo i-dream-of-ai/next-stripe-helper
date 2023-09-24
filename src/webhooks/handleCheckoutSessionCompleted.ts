@@ -2,11 +2,11 @@ import Stripe from 'stripe';
 import { stripe } from '../utils/stripe';
 
 export interface ManageSubscriptionChangeFunction {
-    (subscriptionId: string, customerId: string, client_reference_id: string | null, isCreated: boolean): Promise<void>;
+    (subscriptionId: string, customerId: string, isCreated: boolean): Promise<void>;
 }
 
 export interface ManageCustomerDetailsChangeFunction {
-    (customerId: string, paymentMethodId: string | Stripe.PaymentMethod | null, client_reference_id: string | null): Promise<void>;
+    (customer: Stripe.Customer | Stripe.DeletedCustomer): Promise<void>;
 }
 
 export async function handleCheckoutSessionCompleted(
@@ -14,7 +14,6 @@ export async function handleCheckoutSessionCompleted(
     manageSubscriptionChange: ManageSubscriptionChangeFunction,
     manageCustomerDetailsChange: ManageCustomerDetailsChangeFunction
 ): Promise<void> {
-    const client_reference_id = checkoutSession.client_reference_id;
     if (checkoutSession.mode === 'subscription') {
         const subscriptionId = checkoutSession.subscription as string;
         if (checkoutSession.customer !== null) {
@@ -24,7 +23,6 @@ export async function handleCheckoutSessionCompleted(
             await manageSubscriptionChange(
                 subscriptionId,
                 customerId,
-                client_reference_id,
                 true
             );
         } else {
@@ -49,17 +47,13 @@ export async function handleCheckoutSessionCompleted(
             }
     
             // Set the payment method as the default for the customer
-            await stripe.customers.update(checkoutSession.customer, {
+            const customer = await stripe.customers.update(checkoutSession.customer, {
                 invoice_settings: {
                     default_payment_method: setupIntent.payment_method,
                 },
             });
     
-            await manageCustomerDetailsChange(
-                checkoutSession.customer,
-                setupIntent.payment_method,
-                client_reference_id
-            );
+            await manageCustomerDetailsChange(customer);
         } catch (error) {
             console.error("Failed to update customer's default payment method:", error);
             throw new Error('Failed to set default payment method.');

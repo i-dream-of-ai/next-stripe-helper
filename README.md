@@ -451,277 +451,295 @@ export async function POST(req) {
 
 ```
 
-Examples of Webhook functions you could use with a MongoDB Database.
+Examples of Webhook helper functions you could use with a MongoDB Database.
 
 ``` javascript
-import clientPromise from '@/lib/mongodb'; //assuming you have a funciton to get your clientPromise for your DB.
-import { ObjectId } from 'mongodb';
+import { ObjectId } from "mongodb";
+import Stripe from "stripe";
 
-const dbName = process.env.MONGODB_DB; //assuming you are using the db name.
+import clientPromise from "@/lib/mongodb"; //assuming you have a function to get your DB clientPromise
 
+import { convertToNumberOrBoolean } from "./utils"; //simple utility to convert a string to a number or boolean or remain string;
 
-//this will GET the active Stripe products and related Prices in your DB
+import { getCustomer } from "next-stripe-helper";
+
+const stripeSecret = process.env.STRIPE_SECRET_LIVE || process.env.STRIPE_SECRET || "";
+
+/**
+ * Initialize the Stripe SDK with the secret key.
+ */
+const stripe = new Stripe(stripeSecret, {
+  apiVersion: "2023-08-16",
+});
+
+const dbName = process.env.MONGODB_DB;
+
 export const getActiveProductsWithPrices = async () => {
-    try {
-        const client = await clientPromise
-        const data = await client
-            .db(dbName)
-            .collection('products')
-            .aggregate([
-                {
-                    $lookup: {
-                        from: 'prices',
-                        localField: '_id',
-                        foreignField: 'product_id',
-                        as: 'prices',
-                    },
-                },
-                { $match: { active: true, 'prices.active': true } },
-                { $sort: { 'metadata.index': 1, 'prices.unit_amount': 1 } },
-            ])
-            .toArray()
-
-        return data || []
-    } catch (error) {
-        console.log(error.message)
-        return []
-    }
-}
-
-//this will GET the active Stripe products in your DB
-export const getActiveApiProductsWithPrices = async () => {
-    try {
-        const client = await clientPromise
-        const data = await client
-            .db(dbName)
-            .collection('products')
-            .aggregate([
-                {
-                    $lookup: {
-                        from: 'prices',
-                        localField: '_id',
-                        foreignField: 'product_id',
-                        as: 'prices',
-                    },
-                },
-                {
-                    $match: {
-                        active: true,
-                        'prices.active': true,
-                        'metadata.is_api_product': 'true',
-                    },
-                },
-                { $sort: { 'metadata.index': 1, 'prices.unit_amount': 1 } },
-            ])
-            .toArray()
-
-        return data || []
-    } catch (error) {
-        console.log(error.message)
-        return []
-    }
-}
-
-//this will keep the active Stripe products updated in your DB
-export const upsertProductRecord = async (product) => {
-    const productData = {
-        _id: product.id,
-        active: product.active,
-        name: product.name,
-        description: product.description ?? undefined,
-        image: product.images?.[0] ?? null,
-        metadata: product.metadata,
-    }
-    const client = await clientPromise
-    const result = await client
-        .db(dbName)
-        .collection('products')
-        .updateOne(
-            { _id: productData._id },
-            { $set: productData },
-            { upsert: true }
-        )
-
-    if (result.upsertedCount || result.modifiedCount) {
-        console.log(`Product inserted/updated: ${product.id}`)
-    }
-}
-
-//this will keep the active Stripe prices updated in your DB
-export const upsertPriceRecord = async (price) => {
-    const priceData = {
-        _id: price.id,
-        product_id: typeof price.product === 'string' ? price.product : '',
-        active: price.active,
-        currency: price.currency,
-        description: price.nickname ?? undefined,
-        type: price.type,
-        unit_amount: price.unit_amount ?? undefined,
-        interval: price.recurring?.interval,
-        interval_count: price.recurring?.interval_count,
-        trial_period_days: price.recurring?.trial_period_days,
-        metadata: price.metadata,
-    }
-    const client = await clientPromise
-    const result = await client
-        .db(dbName)
-        .collection('prices')
-        .updateOne(
-            { _id: priceData._id },
-            { $set: priceData },
-            { upsert: true }
-        )
-
-    if (result.upsertedCount || result.modifiedCount) {
-        console.log(`Price inserted/updated: ${price.id}`)
-    }
-}
-
-//this will keep your user billing details updated in your DB
-const copyBillingDetailsToCustomer = async (uuid, payment_method) => {
-    const customer = payment_method.customer
-    const { name, phone, address } = payment_method.billing_details
-    if (!name || !phone || !address) return
-
-    await stripe.customers.update(customer, { name, phone, address })
-    const client = await clientPromise
-    const result = await client.db(dbName).collection('users').findOneAndUpdate(
-        { _id: uuid },
+  try {
+    const client = await clientPromise;
+    const data = await client
+      .db(dbName)
+      .collection("products")
+      .aggregate([
         {
-            $set: {
-                billing_address: { ...address },
-                payment_method: { ...payment_method[payment_method.type] },
-            },
+          $lookup: {
+            from: "prices",
+            localField: "_id",
+            foreignField: "product_id",
+            as: "prices",
+          },
         },
-        { returnOriginal: false }
-    )
-    if (!result.value) {
-        throw new Error('Error updating user billing details')
-    }
-}
+        { $match: { active: true, "prices.active": true } },
+        { $sort: { "metadata.index": 1, "prices.unit_amount": 1 } },
+      ])
+      .toArray();
 
-//this will keep the customer subscriptions updated in your DB
+    return data || [];
+  } catch (error) {
+    console.log(error.message);
+    return [];
+  }
+};
+
+export const getActiveApiProductsWithPrices = async () => {
+  try {
+    const client = await clientPromise;
+    const data = await client
+      .db(dbName)
+      .collection("products")
+      .aggregate([
+        {
+          $lookup: {
+            from: "prices",
+            localField: "_id",
+            foreignField: "product_id",
+            as: "prices",
+          },
+        },
+        {
+          $match: {
+            active: true,
+            "prices.active": true,
+            "metadata.is_api_product": "true",
+          },
+        },
+        { $sort: { "metadata.index": 1, "prices.unit_amount": 1 } },
+      ])
+      .toArray();
+
+    return data || [];
+  } catch (error) {
+    console.log(error.message);
+    return [];
+  }
+};
+
+export const upsertProductRecord = async (product) => {
+  const productData = {
+    _id: product.id,
+    active: product.active,
+    name: product.name,
+    description: product.description ?? undefined,
+    image: product.images?.[0] ?? null,
+    metadata: product.metadata,
+  };
+  const client = await clientPromise;
+  const result = await client
+    .db(dbName)
+    .collection("products")
+    .updateOne({ _id: productData._id }, { $set: productData }, { upsert: true });
+
+  if (result.upsertedCount || result.modifiedCount) {
+    console.log(`Product inserted/updated: ${product.id}`);
+  }
+};
+
+export const upsertPriceRecord = async (price) => {
+  const priceData = {
+    _id: price.id,
+    product_id: typeof price.product === "string" ? price.product : "",
+    active: price.active,
+    currency: price.currency,
+    description: price.nickname ?? undefined,
+    type: price.type,
+    unit_amount: price.unit_amount ?? undefined,
+    interval: price.recurring?.interval,
+    interval_count: price.recurring?.interval_count,
+    trial_period_days: price.recurring?.trial_period_days,
+    metadata: price.metadata,
+  };
+  const client = await clientPromise;
+  const result = await client
+    .db(dbName)
+    .collection("prices")
+    .updateOne({ _id: priceData._id }, { $set: priceData }, { upsert: true });
+
+  if (result.upsertedCount || result.modifiedCount) {
+    console.log(`Price inserted/updated: ${price.id}`);
+  }
+};
+
+const copyBillingDetailsToCustomer = async (uuid, payment_method) => {
+  const customer = payment_method.customer;
+  const { name, phone, address } = payment_method.billing_details;
+  if (!name || !phone || !address) return;
+
+  await stripe.customers.update(customer, { name, phone, address });
+  const client = await clientPromise;
+  const result = await client
+    .db(dbName)
+    .collection("users")
+    .findOneAndUpdate(
+      { _id: new ObjectId(uuid) },
+      {
+        $set: {
+          billing_address: { ...address },
+          payment_method: { ...payment_method[payment_method.type] },
+        },
+      },
+      { returnDocument: "after" }
+    );
+  if (!result) {
+    console.error("Error updating user billing details");
+    throw new Error("Error updating user billing details");
+  }
+};
+
+export const checkSubscriptionLimit = async (collectionKey, metadataKey, userId) => {
+  if (!collectionKey || !metadataKey || !userId) return;
+
+  const client = await clientPromise;
+
+  const subscription = await client
+    .db(dbName)
+    .collection("subscriptions")
+    .findOne({ user_id: new ObjectId(userId), status: "active" });
+
+  if (!subscription) {
+    return false;
+  }
+
+  const product = await client
+    .db(dbName)
+    .collection("products")
+    .findOne({ _id: subscription.items[0].product_id });
+
+  if (!product) {
+    return false;
+  }
+
+  let limit = convertToNumberOrBoolean(product.metadata[metadataKey]);
+
+  let result;
+  let allowed = false;
+  if (typeof limit !== "boolean") {
+    const count = await client
+      .db(dbName)
+      .collection(collectionKey)
+      .countDocuments({ userId: new ObjectId(userId) });
+    allowed = count < limit;
+    result = count;
+  } else {
+    allowed = limit;
+    limit = 0;
+    result = 0;
+  }
+
+  return { allowed, result, limit };
+};
+
 export const manageSubscriptionStatusChange = async (
-    subscriptionId,
-    customerId,
-    createAction = false
+  subscriptionId,
+  customerId,
+  createAction = false
 ) => {
-    console.log('manageSubscriptionStatusChange: Started.')
-    console.log(customerId)
-    const client = await clientPromise
-    const customerData = await client
-        .db(dbName)
-        .collection('customers')
-        .findOne({ stripe_customer_id: customerId })
 
-    if (!customerData) {
-        console.log(
-            'manageSubscriptionStatusChange: Customer not found. id:',
-            customerId
-        )
-        throw new Error('Customer not found')
-    } else {
-        console.log(
-            'manageSubscriptionStatusChange: Customer found: ',
-            customerData
-        )
-    }
+  const customer = await getCustomer(customerId);
 
-    const uuid = customerData._id.toString()
+  const client = await clientPromise;
+  const user = await client.db(dbName).collection("users").findOne({ email: customer.email });
 
-    let subscription
-    try {
-        subscription = await stripe.subscriptions.retrieve(subscriptionId, {
-            expand: ['default_payment_method'],
-        })
-    } catch (error) {
-        console.log('manageSubscriptionStatusChange: Stripe Error: ', error)
-        throw new Error(
-            'Stripe error retrieving subscription in manageSubscriptionStatusChange.'
-        )
-    }
+  if (!user) {
+    console.log("manageSubscriptionStatusChange: Customer not found. id:", customerId);
+    throw new Error("Customer not found");
+  } else {
+    console.log("manageSubscriptionStatusChange: Customer found and Updated: ", customerId);
+  }
 
-    if (!subscription) {
-        throw new Error(
-            'Stripe error retrieving subscription in manageSubscriptionStatusChange.',
-            subscription
-        )
-    } else {
-        console.log(
-            'manageSubscriptionStatusChange: Stripe subscription found.',
-            subscription.id
-        )
-    }
-    const subscriptionItems = subscription.items.data.map((item) => ({
-        price_id: item.price.id,
-        product_id: item.price.product,
-        quantity: item.quantity,
-    }))
+  const uuid = user._id.toString();
 
-    const subscriptionData = {
-        _id: subscription.id,
-        user_id: new ObjectId(uuid),
-        team_id: new ObjectId(subscription.metadata.team_id),
-        metadata: subscription.metadata,
-        status: subscription.status,
-        price_id: subscription.items.data[0].price.id,
-        items: subscriptionItems,
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        cancel_at: subscription.cancel_at
-            ? new Date(subscription.cancel_at * 1000)
-            : null,
-        canceled_at: subscription.canceled_at
-            ? new Date(subscription.canceled_at * 1000)
-            : null,
-        current_period_start: new Date(
-            subscription.current_period_start * 1000
-        ),
-        current_period_end: new Date(subscription.current_period_end * 1000),
-        created: new Date(subscription.created * 1000),
-        ended_at: subscription.ended_at
-            ? new Date(subscription.ended_at * 1000)
-            : null,
-        trial_start: subscription.trial_start
-            ? new Date(subscription.trial_start * 1000)
-            : null,
-        trial_end: subscription.trial_end
-            ? new Date(subscription.trial_end * 1000)
-            : null,
-    }
-    const result = await client
-        .db(dbName)
-        .collection('subscriptions')
-        .updateOne(
-            { user_id: new ObjectId(uuid), _id: subscription.id },
-            { $set: subscriptionData },
-            { upsert: true }
-        )
+  let subscription;
+  try {
+    subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ["default_payment_method"],
+    });
+  } catch (error) {
+    console.log("manageSubscriptionStatusChange: Stripe Error: ", error);
+    throw new Error("Stripe error retrieving subscription in manageSubscriptionStatusChange.");
+  }
 
-    if (result.upsertedCount || result.modifiedCount) {
-        console.log(
-            `Inserted/updated subscription [${subscription.id}] for user [${uuid}]`
-        )
-    } else {
-        console.log(
-            `manageSubscriptionStatusChange: Subscription for user [${uuid}] was not updated.`,
-            result
-        )
-    }
+  if (!subscription) {
+    throw new Error(
+      "Stripe error retrieving subscription in manageSubscriptionStatusChange.",
+      subscription
+    );
+  } else {
+    console.log("manageSubscriptionStatusChange: Stripe subscription found.", subscription.id);
+  }
+  const subscriptionItems = subscription.items.data.map((item) => ({
+    price_id: item.price.id,
+    product_id: item.price.product,
+    quantity: item.quantity,
+  }));
 
-    if (createAction && subscription.default_payment_method && uuid) {
-        await copyBillingDetailsToCustomer(
-            uuid,
-            subscription.default_payment_method
-        )
-    }
-}
+  const subscriptionData = {
+    _id: subscription.id,
+    user_id: new ObjectId(uuid),
+    team_id: new ObjectId(subscription.metadata.team_id),
+    metadata: subscription.metadata,
+    status: subscription.status,
+    price_id: subscription.items.data[0].price.id,
+    items: subscriptionItems,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
+    canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
+    current_period_start: new Date(subscription.current_period_start * 1000),
+    current_period_end: new Date(subscription.current_period_end * 1000),
+    created: new Date(subscription.created * 1000),
+    ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000) : null,
+    trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+    trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+  };
+  const result = await client
+    .db(dbName)
+    .collection("subscriptions")
+    .updateOne({ user_id: new ObjectId(uuid) }, { $set: subscriptionData }, { upsert: true });
 
-//this will keep the customer id and thier paymentID updated in your DB
-export async function manageCustomerDetailsChange(
-  customerId: string,
-  defaultPaymentMethodId: string,
-) {
-  // Your code to update the user document in your database
+  if (result.upsertedCount || result.modifiedCount) {
+    console.log(`Inserted/updated subscription [${subscriptionId}] for user [${uuid}]`);
+  } else {
+    console.error(
+      `manageSubscriptionStatusChange: Subscription for user [${uuid}] was not updated.`,
+      result
+    );
+  }
+
+  if (createAction && subscription.default_payment_method && uuid) {
+    await copyBillingDetailsToCustomer(uuid, subscription.default_payment_method);
+  }
+};
+
+export async function manageCustomerDetailsChange(stripeCustomer) {
+  try {
+
+    const client = await clientPromise;
+    await client.db(dbName).collection("users").findOneAndUpdate({ email: stripeCustomer.email },{
+      $set: {customerId: stripeCustomer.id}
+    });
+
+  } catch (error) {
+    throw error
+  }
 }
 ```
 
