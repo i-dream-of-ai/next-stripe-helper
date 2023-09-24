@@ -78,7 +78,6 @@ export const webhookHandler = async (
                 case 'customer.created':
                 case 'customer.deleted':
                 case 'customer.updated':
-                    console.log('customer.created', stripeEvent.data.object)
                     await manageCustomerDetailsChange(stripeEvent.data.object as Stripe.Customer);
                     break;
                 case 'customer.subscription.created':
@@ -91,7 +90,6 @@ export const webhookHandler = async (
                             subscription.customer,
                             stripeEvent.type === 'customer.subscription.created'
                         );
-                        
                     } else if (subscription.customer && 'id' in subscription.customer) {
                         await manageSubscriptionChange(
                             subscription.id,
