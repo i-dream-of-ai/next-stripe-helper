@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCustomerPaymentMethods = exports.updateCustomer = exports.getCustomer = exports.createCustomer = void 0;
+exports.getCustomerPaymentMethods = exports.updateCustomer = exports.getCustomerByEmail = exports.getCustomer = exports.createCustomer = void 0;
 const stripe_1 = require("../utils/stripe");
 /**
  * Create a new Stripe customer.
@@ -18,6 +18,28 @@ async function createCustomer(email) {
     }
 }
 exports.createCustomer = createCustomer;
+/**
+ * Gets a Stripe customer based on the email given.
+ *
+ * @param {string} email - The email address of the customer.
+ * @returns {Customer} - The customer data found mathing the email given
+ * @throws {Error} - Throws an error if the Stripe API call fails.
+ */
+async function getCustomerByEmail(email, limit = 1) {
+    try {
+        const customers = await stripe_1.stripe.customers.list({ email, limit });
+        //if the limit was one, go ahead and return the one customer
+        if (limit === 1) {
+            return customers.data[0];
+        }
+        //limit was higher than one, return an array of data
+        return customers.data;
+    }
+    catch (error) {
+        (0, stripe_1.handleStripeError)(error);
+    }
+}
+exports.getCustomerByEmail = getCustomerByEmail;
 /**
  * Retrieve customer details from Stripe.
  *

@@ -111,6 +111,19 @@ import { createCustomer, getCustomer, updateCustomer } from 'next-stripe-helper'
 
    - `email` (required): The email address of the new customer.
 
+### Get a Stripe Customer based on a specific email
+
+   Get a customer in Stripe using their email address.
+
+   ```javascript
+   const customerData = await getCustomerByEmail(email: string, limit: number = 1)
+   ```
+
+   Parameters:
+
+   - `email` (required): The email address of the new customer.
+   - `limit` (optional): Limit the number of returned customer data. If limit is higher than 1, then an array will be returned.
+
 ### Retrieve Customer Details
 
    Fetch the details of a specific customer using their Stripe customer ID.

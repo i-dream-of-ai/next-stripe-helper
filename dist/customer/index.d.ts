@@ -8,6 +8,14 @@ import Stripe from "stripe";
  */
 declare function createCustomer(email: string): Promise<object>;
 /**
+ * Gets a Stripe customer based on the email given.
+ *
+ * @param {string} email - The email address of the customer.
+ * @returns {Customer} - The customer data found mathing the email given
+ * @throws {Error} - Throws an error if the Stripe API call fails.
+ */
+declare function getCustomerByEmail(email: string, limit?: number): Promise<object>;
+/**
  * Retrieve customer details from Stripe.
  *
  * @param {string} customerId - The ID of the customer in Stripe.
@@ -32,4 +40,4 @@ declare function updateCustomer(customerId: string, updates: object): Promise<ob
  * @throws {Error} Throws an error if there's a problem communicating with the Stripe API.
  */
 declare function getCustomerPaymentMethods(customerId: string): Promise<Stripe.PaymentMethod[]>;
-export { createCustomer, getCustomer, updateCustomer, getCustomerPaymentMethods };
+export { createCustomer, getCustomer, getCustomerByEmail, updateCustomer, getCustomerPaymentMethods };

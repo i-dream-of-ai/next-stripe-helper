@@ -17,6 +17,27 @@ async function createCustomer(email: string): Promise<object> {
 }
 
 /**
+ * Gets a Stripe customer based on the email given.
+ * 
+ * @param {string} email - The email address of the customer.
+ * @returns {Customer} - The customer data found mathing the email given
+ * @throws {Error} - Throws an error if the Stripe API call fails.
+ */
+async function getCustomerByEmail(email: string, limit: number = 1): Promise<object> {
+    try {
+        const customers = await stripe.customers.list({email,limit});
+        //if the limit was one, go ahead and return the one customer
+        if(limit === 1){
+            return customers.data[0];
+        } 
+        //limit was higher than one, return an array of data
+        return customers.data;
+    } catch (error) {
+        handleStripeError(error as Stripe.errors.StripeError);
+    }
+}
+
+/**
  * Retrieve customer details from Stripe.
  * 
  * @param {string} customerId - The ID of the customer in Stripe.
@@ -70,6 +91,7 @@ async function getCustomerPaymentMethods(customerId: string): Promise<Stripe.Pay
 export {
     createCustomer,
     getCustomer,
+    getCustomerByEmail,
     updateCustomer,
     getCustomerPaymentMethods
 };
