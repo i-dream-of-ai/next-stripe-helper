@@ -56,6 +56,9 @@ export const webhookHandler = async (
         'product.updated',
         'price.created',
         'price.updated',
+        'customer.created',
+        'customer.deleted',
+        'customer.updated',
         'checkout.session.completed',
         'customer.subscription.created',
         'customer.subscription.updated',
@@ -63,7 +66,10 @@ export const webhookHandler = async (
     ]);
 
     if (relevantEvents.has(stripeEvent.type)) {
-        console.log('stripe event: ', stripeEvent.type);
+        
+        if(process.env.NEXT_STRIPE_HELPER_DEBUG){
+            console.log('Processing event:', stripeEvent.type, stripeEvent);
+        }
 
         try {
             switch (stripeEvent.type) {
@@ -101,6 +107,7 @@ export const webhookHandler = async (
                         console.error('Error: Customer ID is not a string or Customer object on subscription deletion');
                         throw new Error('Error: Customer ID is not a string or Customer object on subscription deletion');
                     }
+                    break; 
                 case 'checkout.session.completed':
                     await handleCheckoutSessionCompleted(
                         stripeEvent.data.object as Stripe.Checkout.Session,

@@ -4,7 +4,9 @@
 
 This utility is perfect for developers building e-commerce platforms, subscription-based services, or any other application that requires payment functionalities within a JS or TS ecosystem.
 
-Includes a smart webhook handler that will automatically keep your database up to date with current plans, pricing, and subscriptions.
+Includes a smart webhook handler that will automatically keep your database up to date with current plans, pricing, and subscriptions. I also included a few helper function examples below.
+
+If you would like to contribute or report an error, the github repo is [here]('https://github.com/i-dream-of-ai/next-stripe-helper). Please star and follow if you find this tool helpful!!
 
 ## Installation
 
@@ -21,6 +23,8 @@ You will likely want to start in TEST MODE!! Make sure you use the test mode swi
 Ensure you have set the `STRIPE_SECRET_LIVE` or `STRIPE_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files).
 
 Ensure you have set the `STRIPE_WEBHOOK_SECRET_LIVE` or `STRIPE_WEBHOOK_SECRET` environment variables in your `.env.local` (or other environment-specific `.env` files). 
+
+If you would like to log Stripe Webhook Events for debugging purposes you can add `NEXT_STRIPE_HELPER_DEBUG` in your `.env.local` (or other environment-specific `.env` files). 
 
 ``` dotenv
 
