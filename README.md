@@ -409,7 +409,39 @@ If you add the webhookHandler to an api route, your Database can automatically s
 
 First create your DB functions (upsertProductRecord, upsertPriceRecord, manageSubscriptionStatusChange, manageCustomerDetailsChange), then use them with the webhookHandler function in an api endpoint. 
 
+```javascript
+async function upsertProductRecord(product)
+```
+Returns: 
+
+- `product` Stripe Product Data
+
+```javascript
+async function upsertPriceRecord(price)
+```
+Returns: 
+
+- `price` Stripe Price Data
+
+```javascript
+async function manageSubscriptionStatusChange(subscriptionId, customerId, isCreated)
+```
+Returns: 
+
+- `subscriptionId` string - Stripe Subcription ID
+- `customerId` string - Stripe Customer ID
+- `isCreated` string - is newly created
+
+```javascript
+async function manageCustomerDetailsChange(stripeCustomer, eventType)
+```
+Returns: 
+
+- `stripeCustomer` object - Stripe Customer data
+- `eventType` string - 'created', 'updated', 'deleted'
+
 You can find example functions below that use MongoDb, but it can be used with any DB type.
+
 
 ### Usage
 
@@ -425,7 +457,12 @@ Then, set up an API route in Next.js to handle the Stripe webhook:
 // pages/api/stripe/webhook/route.js
 
 import { webhookHandler } from 'next-stripe-helper';
-import { manageSubscriptionStatusChange, manageCustomerDetailsChange, upsertPriceRecord, upsertProductRecord } from '@/lib/stripe';
+import { 
+  manageSubscriptionStatusChange, 
+  manageCustomerDetailsChange, 
+  upsertPriceRecord, 
+  upsertProductRecord 
+} from '@/lib/stripe';
 import { headers } from "next/headers"
 
 export async function POST(req) {
@@ -733,16 +770,17 @@ export const manageSubscriptionStatusChange = async (
   }
 };
 
-export async function manageCustomerDetailsChange(stripeCustomer) {
-  try {
+export async function manageCustomerDetailsChange(stripeCustomer, eventType) {
+  if(eventType !== "deleted"){
+    try {
+      const client = await clientPromise;
+      await client.db(dbName).collection("users").findOneAndUpdate({ email: stripeCustomer.email },{
+        $set: {customerId: stripeCustomer.id}
+      });
 
-    const client = await clientPromise;
-    await client.db(dbName).collection("users").findOneAndUpdate({ email: stripeCustomer.email },{
-      $set: {customerId: stripeCustomer.id}
-    });
-
-  } catch (error) {
-    throw error
+    } catch (error) {
+      throw error
+    }
   }
 }
 ```
