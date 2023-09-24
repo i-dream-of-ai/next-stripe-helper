@@ -6,7 +6,7 @@ This utility is perfect for developers building e-commerce platforms, subscripti
 
 Includes a smart webhook handler that will automatically keep your database up to date with current plans, pricing, and subscriptions. I also included a few helper function examples below.
 
-If you would like to contribute or report an error, the github repo is [here]('https://github.com/i-dream-of-ai/next-stripe-helper). Please star and follow if you find this tool helpful!!
+If you would like to contribute or report an error, the github repo is [here](https://github.com/i-dream-of-ai/next-stripe-helper). Please star and follow if you find this tool helpful!!
 
 ## Installation
 
