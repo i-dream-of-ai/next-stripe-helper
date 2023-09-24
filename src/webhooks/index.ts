@@ -78,6 +78,7 @@ export const webhookHandler = async (
                 case 'customer.created':
                 case 'customer.deleted':
                 case 'customer.updated':
+                    console.log('customer.created', stripeEvent.data.object)
                     await manageCustomerDetailsChange(stripeEvent.data.object as Stripe.Customer);
                     break;
                 case 'customer.subscription.created':

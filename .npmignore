@@ -6,6 +6,7 @@ coverage/
 dist/
 build/
 docs/
+src/
 
 # System files
 .DS_Store
