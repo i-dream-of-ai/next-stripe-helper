@@ -224,9 +224,10 @@ async function addItemToSubscription(subscriptionId:string, priceId:string, quan
         quantity
       });
   
-      console.log('Subscription item created:', subscriptionItem.id);
+      return subscriptionItem;
     } catch (error) {
       console.error('Error creating subscription item:', error);
+      throw error;
     }
   }
 

@@ -350,7 +350,7 @@ This will use the current payment method by default.
 Customer must have an existing subscription.
 
 ```javascript
-const subscriptionDetails = await addItemToSubscription("subscriptionId", "priceId", "quantity")
+const subscriptionItem = await addItemToSubscription("subscriptionId", "priceId", "quantity")
 ```
 
 Parameters:
