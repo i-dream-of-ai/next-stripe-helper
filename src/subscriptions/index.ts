@@ -83,7 +83,6 @@ async function getUserFirstActivePlan(customerId: string): Promise<{ subscriptio
         });
     
         if (subscriptions.data.length === 0) {
-            console.log('Customer has no active subscriptions: ', customerId);
             return {
                 subscription: null, 
                 plan: null
@@ -181,7 +180,7 @@ async function updateSubscriptionPlan(subscriptionId:string, options: Stripe.Sub
 
 
 /**
- * Updates a customer's subscription to a new plan. Deletes the old one plan, adds the new one to the subscription, and charges the prorated price.
+ * Changes a customer's subscription to a new plan. Deletes the old one plan, adds the new one to the subscription, and charges the prorated price.
  * 
  *  
  * @param {string} subscriptionId - Subscription ID
@@ -216,6 +215,20 @@ async function changeSubscriptionPlan(subscriptionId:string, oldItemId:string, n
         throw error;
     }
 }
+
+async function addItemToSubscription(subscriptionId:string, priceId:string, quantity: number = 1) {
+    try {
+      const subscriptionItem = await stripe.subscriptionItems.create({
+        subscription: subscriptionId,
+        price: priceId,
+        quantity
+      });
+  
+      console.log('Subscription item created:', subscriptionItem.id);
+    } catch (error) {
+      console.error('Error creating subscription item:', error);
+    }
+  }
 
 async function listUserSubscriptions(customerID: string): Promise<Stripe.Subscription[]> {
     try {
@@ -269,6 +282,7 @@ export {
     getUserSubscription,
     getUserSubscriptions,
     getUserSubscriptionDetails,
+    addItemToSubscription,
     updateUserSubscriptionMetadata,
     listUserSubscriptions,
     changeSubscriptionPlan,

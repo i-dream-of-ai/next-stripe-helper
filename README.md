@@ -243,18 +243,25 @@ The `next-stripe-helper` package offers a suite of utilities designed to streaml
 
 ### Usage
 
-Before you can use these utilities, you need to import them:
+Before you can use these utilities, you need to import them.
+
+Here is a list of available subscription functions:
 
 ```javascript
 import {
     createSubscription,
-    getUserCurrentPlan,
+    getUserFirstActivePlan,
     getUserSubscription,
+    getUserSubscriptions,
     getUserSubscriptionDetails,
+    addItemToSubscription,
     updateUserSubscriptionMetadata,
-    changeSubscriptionPlan,
     listUserSubscriptions,
-    cancelUserSubscription
+    changeSubscriptionPlan,
+    updateSubscriptionPlan,
+    cancelUserSubscription,
+    getSubscriptionPeriod,
+    getProductMetadataFromSubscription
 } from 'next-stripe-helper';
 ```
 
@@ -276,7 +283,7 @@ Parameters:
 Fetch details of a users first plan using the Customer ID:
 
 ```javascript
-const plan = await getUserCurrentPlan('customer__id');
+const plan = await getUserFirstActivePlan('customer__id');
 ```
 
 Parameters:
@@ -308,7 +315,7 @@ This will use the current payment method by default.
 Customer must have an existing subscription.
 
 ```javascript
-const subscriptionDetails = await changeSubscriptionPlan('subscription_id', 'options object')
+const subscriptionDetails = await updateSubscriptionPlan('subscription_id', 'options object')
 ```
 
 Parameters:
@@ -334,6 +341,23 @@ Parameters:
 - `item_id` (required): The Stripe Item ID of the plan.
 - `new_price_id` (required): The Stripe Price ID of the new plan (price_id).
 
+
+### Add a single item (price) to a User's Subscription
+
+Add a single item to a users existing subscription:
+
+This will use the current payment method by default.
+Customer must have an existing subscription.
+
+```javascript
+const subscriptionDetails = await addItemToSubscription("subscriptionId", "priceId", "quantity")
+```
+
+Parameters:
+
+- `subscriptionID` (required): The Stripe ID of the existing subscription.
+- `priceId` : (required): The Stripe Price ID of the item.
+- `quantity` : (optional): The quantity of the item you are adding. Defaults to 1.
 
 ### Get Detailed Information About a Subscription
 
