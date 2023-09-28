@@ -216,12 +216,13 @@ async function changeSubscriptionPlan(subscriptionId:string, oldItemId:string, n
     }
 }
 
-async function addItemToSubscription(subscriptionId:string, priceId:string, quantity: number = 1) {
+async function addItemToSubscription(subscriptionId:string, priceId:string, quantity: number = 1, proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice') {
     try {
       const subscriptionItem = await stripe.subscriptionItems.create({
         subscription: subscriptionId,
         price: priceId,
-        quantity
+        quantity,
+        proration_behavior
       });
   
       return subscriptionItem;
@@ -229,7 +230,7 @@ async function addItemToSubscription(subscriptionId:string, priceId:string, quan
       console.error('Error creating subscription item:', error);
       throw error;
     }
-  }
+}
 
 async function listUserSubscriptions(customerID: string): Promise<Stripe.Subscription[]> {
     try {

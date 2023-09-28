@@ -350,14 +350,16 @@ This will use the current payment method by default.
 Customer must have an existing subscription.
 
 ```javascript
-const subscriptionItem = await addItemToSubscription("subscriptionId", "priceId", "quantity")
+const subscriptionItem = await addItemToSubscription("subscriptionId", "priceId", "quantity", "proration_behavior")
 ```
 
 Parameters:
 
 - `subscriptionID` (required): The Stripe ID of the existing subscription.
-- `priceId` : (required): The Stripe Price ID of the item.
-- `quantity` : (optional): The quantity of the item you are adding. Defaults to 1.
+- `priceId` (required): The Stripe Price ID of the item.
+- `quantity` (optional): The quantity of the item you are adding. Defaults to 1.
+- `proration_behavior` (optional): Determines how to handle prorations when the billing cycle changes (e.g., when switching plans, resetting billing_cycle_anchor=now, or starting a trial), or if an item’s quantity changes. The default value is always_invoice. ('create_prorations', 'none', 'always_invoice')
+
 
 ### Get Detailed Information About a Subscription
 
