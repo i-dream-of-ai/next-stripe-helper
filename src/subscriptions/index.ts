@@ -391,6 +391,38 @@ async function updateItemQuantity(
     }
 }
 
+async function updateItemQuantityByPriceId(subscriptionID: string, priceId: string, newQuantity: number, proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'): Promise<Stripe.SubscriptionItem | null> {
+  try {
+
+      // Retrieve the existing subscription to find the subscription item for the specified price
+      const subscription = await stripe.subscriptions.retrieve(subscriptionID, {
+        expand: ['items'],
+      });
+  
+      // Find the subscription item for the specified price
+      const subscriptionItem = subscription.items.data.find(item => item.price.id === priceId);
+
+      if (!subscriptionItem) {
+        throw new Error('Subscription item not found for the specified price');
+      }
+
+      newQuantity = Number(newQuantity);
+
+      // Update the quantity of the subscription item
+      const updatedSubscriptionItem = await stripe.subscriptionItems.update(
+        subscriptionItem.id,
+        {
+          quantity: newQuantity,
+          proration_behavior
+        }
+      );
+  
+      return updatedSubscriptionItem;
+  } catch (error) {
+      handleStripeError(error as Stripe.errors.StripeError);
+  }
+}
+
 async function listSubscriptionsItems(subscriptionID: string): Promise<Stripe.SubscriptionItem[]> {
     try {
         const subscriptionItems = await stripe.subscriptionItems.list({
@@ -475,6 +507,7 @@ export {
     removeItemsByPriceId,
     listSubscriptionsItems,
     getASubscriptionItemByPriceId,
+    updateItemQuantityByPriceId,
     updateUserSubscriptionMetadata,
     listUserSubscriptions,
     changeSubscriptionPlan,

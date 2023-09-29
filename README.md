@@ -382,6 +382,26 @@ Parameters:
 - `proration_behavior` (optional): Determines how to handle prorations when the billing cycle changes (e.g., when switching plans, resetting billing_cycle_anchor=now, or starting a trial), or if an item’s quantity changes. The default value is always_invoice. ('create_prorations', 'none', 'always_invoice')
 
 
+### Update an items quantity on a User's Subscription by Price ID
+
+Update a subscription items quantity on a users existing subscription:
+
+This will use the current payment method by default.
+Customer must have an existing subscription.
+
+```javascript
+const updatedSubscriptionItem = await updateItemQuantityByPriceId("subscriptionId", "priceId", "newQuantity", "proration_behavior")
+```
+
+Parameters:
+
+- `subscriptionItemId` (required): The ID of the existing ITEM in the subscription (not the subscription ID).
+- `priceId` (required): The Stripe Price ID of the item.
+- `newQuantity` (required): The new quanity of the item. Does not add or subtract, it updates the quantity to the new number.
+- `proration_behavior` (optional): Determines how to handle prorations when the billing cycle changes (e.g., when switching plans, resetting billing_cycle_anchor=now, or starting a trial), or if an item’s quantity changes. The default value is always_invoice. ('create_prorations', 'none', 'always_invoice')
+
+
+
 ### Remove a quantity of an item on a User's Subscription
 
 Update a subscription items quantity on a users existing subscription by removing a certain number:
