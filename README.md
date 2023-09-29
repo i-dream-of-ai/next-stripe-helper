@@ -256,6 +256,7 @@ import {
     getUserSubscriptionDetails,
     addItemToSubscription,
     updateItemQuantity,
+    updateItemQuantityByPriceId,
     removeItemsFromSubscription,
     removeItemsByPriceId,
     updateUserSubscriptionMetadata,

@@ -391,23 +391,34 @@ async function updateItemQuantity(
     }
 }
 
-async function updateItemQuantityByPriceId(subscriptionID: string, priceId: string, newQuantity: number, proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'): Promise<Stripe.SubscriptionItem | null> {
+async function updateItemQuantityByPriceId(
+  subscriptionID: string,
+  priceId: string,
+  newQuantity: number,
+  proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'
+): Promise<Stripe.SubscriptionItem | null> {
   try {
+    // Retrieve the existing subscription to find the subscription item for the specified price
+    const subscription = await stripe.subscriptions.retrieve(subscriptionID, {
+      expand: ['items'],
+    });
 
-      // Retrieve the existing subscription to find the subscription item for the specified price
-      const subscription = await stripe.subscriptions.retrieve(subscriptionID, {
-        expand: ['items'],
+    // Find the subscription item for the specified price
+    const subscriptionItem = subscription.items.data.find(item => item.price.id === priceId);
+
+    if (!subscriptionItem) {
+      throw new Error('Subscription item not found for the specified price');
+    }
+
+    newQuantity = Number(newQuantity);
+
+    if (newQuantity === 0) {
+      // Delete the subscription item if the new quantity is 0
+      await stripe.subscriptionItems.del(subscriptionItem.id, {
+        proration_behavior
       });
-  
-      // Find the subscription item for the specified price
-      const subscriptionItem = subscription.items.data.find(item => item.price.id === priceId);
-
-      if (!subscriptionItem) {
-        throw new Error('Subscription item not found for the specified price');
-      }
-
-      newQuantity = Number(newQuantity);
-
+      return null;
+    } else {
       // Update the quantity of the subscription item
       const updatedSubscriptionItem = await stripe.subscriptionItems.update(
         subscriptionItem.id,
@@ -416,10 +427,11 @@ async function updateItemQuantityByPriceId(subscriptionID: string, priceId: stri
           proration_behavior
         }
       );
-  
+
       return updatedSubscriptionItem;
+    }
   } catch (error) {
-      handleStripeError(error as Stripe.errors.StripeError);
+    handleStripeError(error as Stripe.errors.StripeError);
   }
 }
 
