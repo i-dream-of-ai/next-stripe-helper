@@ -360,7 +360,7 @@ Parameters:
 
 - `subscriptionID` (required): The Stripe ID of the existing subscription.
 - `priceId` (required): The Stripe Price ID of the item.
-- `quantity` (optional): The quantity of the item you are adding. Defaults to 1. Will add to existing quantity.
+- `quantity` (optional): The quantity of the item you are adding. Defaults to 1. Will add to existing quantity or add the item to the subsdcription if it doesnt exist.
 - `proration_behavior` (optional): Determines how to handle prorations when the billing cycle changes (e.g., when switching plans, resetting billing_cycle_anchor=now, or starting a trial), or if an item’s quantity changes. The default value is always_invoice. ('create_prorations', 'none', 'always_invoice')
 
 

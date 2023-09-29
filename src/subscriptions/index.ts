@@ -232,19 +232,22 @@ async function addItemToSubscription(
       const subscriptionItem = subscription.items.data.find(item => item.price.id === priceId);
   
       if (subscriptionItem) {
-        // If the subscription item exists, update its quantity
+        // Ensure the quantities are treated as numbers
+        const currentQuantity = Number(subscriptionItem.quantity);
+        const newQuantity = currentQuantity + additionalQuantity;
+  
+        // Update the quantity of the subscription item
         const updatedSubscriptionItem = await stripe.subscriptionItems.update(
           subscriptionItem.id,
           {
-            quantity: (subscriptionItem.quantity || 0) + additionalQuantity,
-            proration_behavior,
+            quantity: newQuantity,
+            proration_behavior
           }
         );
   
-        console.log('Subscription item updated:', updatedSubscriptionItem.id);
         return updatedSubscriptionItem;
       } else {
-        // If the subscription item doesn't exist, create a new subscription item
+        // Create a new subscription item if it doesn't exist
         const newSubscriptionItem = await stripe.subscriptionItems.create({
           subscription: subscriptionId,
           price: priceId,
@@ -252,7 +255,6 @@ async function addItemToSubscription(
           proration_behavior,
         });
   
-        console.log('Subscription item created:', newSubscriptionItem.id);
         return newSubscriptionItem;
       }
     } catch (error) {
@@ -275,8 +277,10 @@ async function removeItemsFromSubscription(
         throw new Error('Subscription item quantity is undefined');
       }
   
+      const currentQuantity = Number(subscriptionItem.quantity);
+
       // Calculate the new quantity
-      const newQuantity = Math.max(subscriptionItem.quantity - removeQuantity, 0);
+      const newQuantity = Math.max(currentQuantity - removeQuantity, 0);
   
       if (newQuantity === 0) {
         // If the new quantity is 0, delete the subscription item
@@ -328,8 +332,10 @@ async function removeItemsByPriceId(
         throw new Error('Subscription item quantity is undefined');
       }
   
+      const currentQuantity = Number(subscriptionItem.quantity);
+
       // Calculate the new quantity
-      const newQuantity = Math.max(subscriptionItem.quantity - removeQuantity, 0);
+      const newQuantity = Math.max(currentQuantity - removeQuantity, 0);
   
       if (newQuantity === 0) {
         // If the new quantity is 0, delete the subscription item
