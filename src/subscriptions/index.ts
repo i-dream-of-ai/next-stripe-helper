@@ -233,8 +233,7 @@ async function addItemToSubscription(
   
       if (subscriptionItem) {
         // Ensure the quantities are treated as numbers
-        const currentQuantity = Number(subscriptionItem.quantity);
-        const newQuantity = currentQuantity + additionalQuantity;
+        const newQuantity = Number(subscriptionItem.quantity) + Number(additionalQuantity);
   
         // Update the quantity of the subscription item
         const updatedSubscriptionItem = await stripe.subscriptionItems.update(
@@ -251,7 +250,7 @@ async function addItemToSubscription(
         const newSubscriptionItem = await stripe.subscriptionItems.create({
           subscription: subscriptionId,
           price: priceId,
-          quantity: additionalQuantity,
+          quantity: Number(additionalQuantity),
           proration_behavior,
         });
   
@@ -277,6 +276,8 @@ async function removeItemsFromSubscription(
         throw new Error('Subscription item quantity is undefined');
       }
   
+      removeQuantity = Number(removeQuantity);
+
       const currentQuantity = Number(subscriptionItem.quantity);
 
       // Calculate the new quantity
@@ -331,6 +332,8 @@ async function removeItemsByPriceId(
       if (subscriptionItem.quantity === undefined) {
         throw new Error('Subscription item quantity is undefined');
       }
+
+      removeQuantity = Number(removeQuantity);
   
       const currentQuantity = Number(subscriptionItem.quantity);
 
@@ -369,6 +372,9 @@ async function updateItemQuantity(
     proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'
   ) {
     try {
+
+        newQuantity = Number(newQuantity);
+
       // Update the quantity of the subscription item
       const updatedSubscriptionItem = await stripe.subscriptionItems.update(
         subscriptionItemId,
