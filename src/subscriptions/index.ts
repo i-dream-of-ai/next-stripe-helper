@@ -216,18 +216,165 @@ async function changeSubscriptionPlan(subscriptionId:string, oldItemId:string, n
     }
 }
 
-async function addItemToSubscription(subscriptionId:string, priceId:string, quantity: number = 1, proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice') {
+async function addItemToSubscription(
+    subscriptionId: string,
+    priceId: string,
+    additionalQuantity: number = 1,
+    proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'
+  ) {
     try {
-      const subscriptionItem = await stripe.subscriptionItems.create({
-        subscription: subscriptionId,
-        price: priceId,
-        quantity,
-        proration_behavior
+      // Retrieve the existing subscription to find the subscription item for the specified price
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['items'],
       });
   
-      return subscriptionItem;
+      // Find the subscription item for the specified price
+      const subscriptionItem = subscription.items.data.find(item => item.price.id === priceId);
+  
+      if (subscriptionItem) {
+        // If the subscription item exists, update its quantity
+        const updatedSubscriptionItem = await stripe.subscriptionItems.update(
+          subscriptionItem.id,
+          {
+            quantity: (subscriptionItem.quantity || 0) + additionalQuantity,
+            proration_behavior,
+          }
+        );
+  
+        console.log('Subscription item updated:', updatedSubscriptionItem.id);
+        return updatedSubscriptionItem;
+      } else {
+        // If the subscription item doesn't exist, create a new subscription item
+        const newSubscriptionItem = await stripe.subscriptionItems.create({
+          subscription: subscriptionId,
+          price: priceId,
+          quantity: additionalQuantity,
+          proration_behavior,
+        });
+  
+        console.log('Subscription item created:', newSubscriptionItem.id);
+        return newSubscriptionItem;
+      }
     } catch (error) {
-      console.error('Error creating subscription item:', error);
+      console.error('Error updating or creating subscription item:', error);
+      throw error;
+    }
+}
+
+async function removeItemsFromSubscription(
+    subscriptionItemId: string,
+    removeQuantity: number,
+    proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'
+  ) {
+    try {
+      // Retrieve the current subscription item to check its quantity
+      const subscriptionItem = await stripe.subscriptionItems.retrieve(subscriptionItemId);
+  
+      // Ensure subscriptionItem.quantity is defined before proceeding
+      if (subscriptionItem.quantity === undefined) {
+        throw new Error('Subscription item quantity is undefined');
+      }
+  
+      // Calculate the new quantity
+      const newQuantity = Math.max(subscriptionItem.quantity - removeQuantity, 0);
+  
+      if (newQuantity === 0) {
+        // If the new quantity is 0, delete the subscription item
+        const deletedSubscriptionItem = await stripe.subscriptionItems.del(
+          subscriptionItemId,
+          {proration_behavior}
+        );
+  
+        return deletedSubscriptionItem;
+      } else {
+        // If the new quantity is greater than 0, update the subscription item with the new quantity
+        const updatedSubscriptionItem = await stripe.subscriptionItems.update(
+          subscriptionItemId,
+          {
+            quantity: newQuantity,
+            proration_behavior
+          }
+        );
+  
+        return updatedSubscriptionItem;
+      }
+    } catch (error) {
+      console.error('Error updating or deleting subscription item:', error);
+      throw error;
+    }
+}
+
+async function removeItemsByPriceId(
+    subscriptionId: string,
+    priceId: string,
+    removeQuantity: number,
+    proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'
+  ) {
+    try {
+      // Retrieve the existing subscription to find the subscription item for the specified price
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['items'],
+      });
+  
+      // Find the subscription item for the specified price
+      const subscriptionItem = subscription.items.data.find(item => item.price.id === priceId);
+  
+      if (!subscriptionItem) {
+        throw new Error('Subscription item not found for the specified price');
+      }
+  
+      // Ensure subscriptionItem.quantity is defined before proceeding
+      if (subscriptionItem.quantity === undefined) {
+        throw new Error('Subscription item quantity is undefined');
+      }
+  
+      // Calculate the new quantity
+      const newQuantity = Math.max(subscriptionItem.quantity - removeQuantity, 0);
+  
+      if (newQuantity === 0) {
+        // If the new quantity is 0, delete the subscription item
+        const deletedSubscriptionItem = await stripe.subscriptionItems.del(
+          subscriptionItem.id,
+          { proration_behavior }
+        );
+  
+        return deletedSubscriptionItem;
+      } else {
+        // If the new quantity is greater than 0, update the subscription item with the new quantity
+        const updatedSubscriptionItem = await stripe.subscriptionItems.update(
+          subscriptionItem.id,
+          {
+            quantity: newQuantity,
+            proration_behavior
+          }
+        );
+  
+        return updatedSubscriptionItem;
+      }
+    } catch (error) {
+      console.error('Error updating or deleting subscription item:', error);
+      throw error;
+    }
+}
+
+async function updateItemQuantity(
+    subscriptionItemId: string,
+    newQuantity: number,
+    proration_behavior: Stripe.SubscriptionItemCreateParams.ProrationBehavior = 'always_invoice'
+  ) {
+    try {
+      // Update the quantity of the subscription item
+      const updatedSubscriptionItem = await stripe.subscriptionItems.update(
+        subscriptionItemId,
+        {
+          quantity: newQuantity,
+          proration_behavior
+        }
+      );
+  
+      return updatedSubscriptionItem;
+    } catch (error) {
+      console.error('Error updating subscription item quantity:', error);
       throw error;
     }
 }
@@ -285,6 +432,9 @@ export {
     getUserSubscriptions,
     getUserSubscriptionDetails,
     addItemToSubscription,
+    updateItemQuantity,
+    removeItemsFromSubscription,
+    removeItemsByPriceId,
     updateUserSubscriptionMetadata,
     listUserSubscriptions,
     changeSubscriptionPlan,
