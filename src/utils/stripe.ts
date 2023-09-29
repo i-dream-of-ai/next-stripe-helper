@@ -34,8 +34,8 @@ function handleStripeError(error: Stripe.errors.StripeError): never {
             console.error('Connection error:', error.message);
             throw new Error('Unable to connect to our payment provider. Please check your internet connection and try again.');
         default:
-            console.error('Unknown error:', error.message);
-            throw new Error(`Unknown error: ${error.message}`);
+            console.error('STRIPE error:', error.message);
+            throw error;
     }
 }
 
