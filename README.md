@@ -387,6 +387,10 @@ Parameters:
 
 Update a subscription items quantity on a users existing subscription:
 
+This function will ADD an item to a subscription, or UPDATE the quantity if an item is already present on the subscription. 
+
+If the quantity is 0, the item will be DELETED from the subscription.
+
 This will use the current payment method by default.
 Customer must have an existing subscription.
 

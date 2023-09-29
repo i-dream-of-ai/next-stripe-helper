@@ -406,29 +406,42 @@ async function updateItemQuantityByPriceId(
     // Find the subscription item for the specified price
     const subscriptionItem = subscription.items.data.find(item => item.price.id === priceId);
 
-    if (!subscriptionItem) {
-      throw new Error('Subscription item not found for the specified price');
-    }
-
     newQuantity = Number(newQuantity);
 
-    if (newQuantity === 0) {
-      // Delete the subscription item if the new quantity is 0
-      await stripe.subscriptionItems.del(subscriptionItem.id, {
-        proration_behavior
-      });
-      return null;
+    if (subscriptionItem) {
+      if (newQuantity === 0) {
+        // Delete the subscription item if the new quantity is 0
+        await stripe.subscriptionItems.del(subscriptionItem.id, {
+          proration_behavior 
+        });
+        return null;
+      } else {
+        // Update the quantity of the subscription item
+        const updatedSubscriptionItem = await stripe.subscriptionItems.update(
+          subscriptionItem.id,
+          {
+            quantity: newQuantity,
+            proration_behavior
+          }
+        );
+
+        return updatedSubscriptionItem;
+      }
     } else {
-      // Update the quantity of the subscription item
-      const updatedSubscriptionItem = await stripe.subscriptionItems.update(
-        subscriptionItem.id,
-        {
+      if (newQuantity > 0) {
+        // Create a new subscription item if it doesn't exist and the new quantity is greater than 0
+        const newSubscriptionItem = await stripe.subscriptionItems.create({
+          subscription: subscriptionID,
+          price: priceId,
           quantity: newQuantity,
           proration_behavior
-        }
-      );
+        });
 
-      return updatedSubscriptionItem;
+        return newSubscriptionItem;
+      } else {
+        // No action needed if the new quantity is 0 and the item doesn't exist on the subscription
+        return null;
+      }
     }
   } catch (error) {
     handleStripeError(error as Stripe.errors.StripeError);
