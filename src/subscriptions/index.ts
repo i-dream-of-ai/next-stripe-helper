@@ -391,6 +391,32 @@ async function updateItemQuantity(
     }
 }
 
+async function listSubscriptionsItems(subscriptionID: string): Promise<Stripe.SubscriptionItem[]> {
+    try {
+        const subscriptionItems = await stripe.subscriptionItems.list({
+            subscription: subscriptionID,
+        });
+        return subscriptionItems.data;
+    } catch (error) {
+        handleStripeError(error as Stripe.errors.StripeError);
+    }
+}
+
+async function getASubscriptionItemByPriceId(subscriptionID: string, priceId: string): Promise<Stripe.SubscriptionItem | null> {
+    try {
+        // Retrieve the existing subscription to find the subscription item for the specified price
+        const subscription = await stripe.subscriptions.retrieve(subscriptionID, {
+            expand: ['items'],
+        });
+  
+        // Find the subscription item for the specified price
+        const item = subscription.items.data.find(item => item.price.id === priceId);
+        return item || null
+    } catch (error) {
+        handleStripeError(error as Stripe.errors.StripeError);
+    }
+}
+
 async function listUserSubscriptions(customerID: string): Promise<Stripe.Subscription[]> {
     try {
         const subscriptions = await stripe.subscriptions.list({
@@ -447,6 +473,8 @@ export {
     updateItemQuantity,
     removeItemsFromSubscription,
     removeItemsByPriceId,
+    listSubscriptionsItems,
+    getASubscriptionItemByPriceId,
     updateUserSubscriptionMetadata,
     listUserSubscriptions,
     changeSubscriptionPlan,

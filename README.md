@@ -418,6 +418,40 @@ Parameters:
 - `removeQuantity` (required): The number you wish to remove of item. Subtracts the given quantity from the existing amount.
 - `proration_behavior` (optional): Determines how to handle prorations when the billing cycle changes (e.g., when switching plans, resetting billing_cycle_anchor=now, or starting a trial), or if an item’s quantity changes. The default value is always_invoice. ('create_prorations', 'none', 'always_invoice')
 
+
+### Get a subscription Item by Price ID
+
+Retrieve a subscription item on a users existing subscription by using the price id:
+
+Customer must have an existing subscription.
+No item returns null.
+
+```javascript
+const subscriptionItem = await getASubscriptionItemByPriceId("subscriptionId", "priceId")
+```
+
+Parameters:
+
+- `subscriptionId` (required): The subscriptionID of the subscription.
+- `priceId` (required): The Stripe Price ID of the item.
+
+
+
+### List all subscription Items in a subscription
+
+Retrieve a list of all the subscription items on a users existing subscription:
+
+Customer must have an existing subscription.
+
+```javascript
+const subscriptionItem = await getASubscriptionItemByPriceId("subscriptionID")
+```
+
+Parameters:
+
+- `subscriptionID` (required): The ID of the users subscription.
+
+
 ### Get Detailed Information About a Subscription
 
 To fetch comprehensive details about a subscription, including its associated price metadata:
@@ -581,10 +615,9 @@ Examples of Webhook helper functions you could use with a MongoDB Database.
 import { ObjectId } from "mongodb";
 import Stripe from "stripe";
 
-import clientPromise from "@/lib/mongodb"; //assuming you have a function to get your DB clientPromise
+import clientPromise from "@/lib/mongodb";
 
-import { convertToNumberOrBoolean } from "./utils"; //simple utility to convert a string to a number or boolean or remain string;
-
+import { convertToNumberOrBoolean } from "./utils";
 import { getCustomer } from "next-stripe-helper";
 
 const stripeSecret = process.env.STRIPE_SECRET_LIVE || process.env.STRIPE_SECRET || "";
@@ -708,7 +741,9 @@ const copyBillingDetailsToCustomer = async (uuid, payment_method) => {
   const { name, phone, address } = payment_method.billing_details;
   if (!name || !phone || !address) return;
 
+  //optionally you can add illing details to your stripe customer
   await stripe.customers.update(customer, { name, phone, address });
+
   const client = await clientPromise;
   const result = await client
     .db(dbName)
@@ -787,7 +822,7 @@ export const manageSubscriptionStatusChange = async (
     console.log("manageSubscriptionStatusChange: Customer not found. id:", customerId);
     throw new Error("Customer not found");
   } else {
-    console.log("manageSubscriptionStatusChange: Customer found and Updated: ", customerId);
+    console.log("manageSubscriptionStatusChange: Customer found: ", customerId);
   }
 
   const uuid = user._id.toString();
@@ -810,30 +845,60 @@ export const manageSubscriptionStatusChange = async (
   } else {
     console.log("manageSubscriptionStatusChange: Stripe subscription found.", subscription.id);
   }
+
   const subscriptionItems = subscription.items.data.map((item) => ({
     price_id: item.price.id,
     product_id: item.price.product,
     quantity: item.quantity,
   }));
 
-  const subscriptionData = {
-    _id: subscription.id,
-    user_id: new ObjectId(uuid),
-    team_id: new ObjectId(subscription.metadata.team_id),
-    metadata: subscription.metadata,
-    status: subscription.status,
-    price_id: subscription.items.data[0].price.id,
-    items: subscriptionItems,
-    cancel_at_period_end: subscription.cancel_at_period_end,
-    cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
-    canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
-    current_period_start: new Date(subscription.current_period_start * 1000),
-    current_period_end: new Date(subscription.current_period_end * 1000),
-    created: new Date(subscription.created * 1000),
-    ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000) : null,
-    trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-    trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-  };
+  const existingSubscription = await client
+    .db(dbName)
+    .collection("subscriptions")
+    .findOne({ user_id: new ObjectId(uuid) });
+
+  let subscriptionData;
+  if (!existingSubscription) {
+    // If the subscription doesn't exist, include the _id field for the new document
+    subscriptionData = {
+      _id: subscription.id,
+      user_id: new ObjectId(uuid),
+      team_id: new ObjectId(subscription.metadata.team_id),
+      metadata: subscription.metadata,
+      status: subscription.status,
+      price_id: subscription.items.data[0].price.id,
+      items: subscriptionItems,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
+      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
+      current_period_start: new Date(subscription.current_period_start * 1000),
+      current_period_end: new Date(subscription.current_period_end * 1000),
+      created: new Date(subscription.created * 1000),
+      ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000) : null,
+      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+    };
+  } else {
+    // If the subscription exists, omit the _id field to avoid the immutable field error
+    subscriptionData = {
+      user_id: new ObjectId(uuid),
+      team_id: new ObjectId(subscription.metadata.team_id),
+      metadata: subscription.metadata,
+      status: subscription.status,
+      price_id: subscription.items.data[0].price.id,
+      items: subscriptionItems,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
+      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
+      current_period_start: new Date(subscription.current_period_start * 1000),
+      current_period_end: new Date(subscription.current_period_end * 1000),
+      created: new Date(subscription.created * 1000),
+      ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000) : null,
+      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+    };
+  }
+
   const result = await client
     .db(dbName)
     .collection("subscriptions")
@@ -854,13 +919,13 @@ export const manageSubscriptionStatusChange = async (
 };
 
 export async function manageCustomerDetailsChange(stripeCustomer, eventType) {
-  if(eventType !== "deleted"){
+  if(eventType !== 'deleted'){
     try {
       const client = await clientPromise;
       await client.db(dbName).collection("users").findOneAndUpdate({ email: stripeCustomer.email },{
         $set: {customerId: stripeCustomer.id}
       });
-
+  
     } catch (error) {
       throw error
     }
