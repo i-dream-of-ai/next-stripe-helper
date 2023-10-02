@@ -252,7 +252,7 @@ const account = await createConnectedAccount({
     country: 'US',
     email: 'affiliate@example.com',
     type: 'express',  // Optional, defaults to 'express'
-    capabilities: {   // Optional, defaults to requesting 'card_payments' and 'transfers'
+    capabilities: {   // Optional, defaults to requesting 'transfers'
         card_payments: { requested: true },
         transfers: { requested: true },
     },
@@ -268,7 +268,43 @@ Parameters:
 - `capabilities` (optional, default `{ card_payments: { requested: true }, transfers: { requested: true } }`): The capabilities to request for the connected account.
 - ...any other parameters as per the [Stripe AccountCreateParams documentation](https://stripe.com/docs/api/accounts/create#create_account).
 
----
+
+### Start OAuth Flow
+
+Initiates the Stripe OAuth flow by constructing the OAuth URL.
+
+```javascript
+const oauthURL = startOAuthFlow('your-stripe-client-id', 'https://your-redirect-uri.com/api/stripe/callback');
+```
+
+Parameters:
+
+- `clientId` (required): Your Stripe client ID. The clientId in the context of the Stripe OAuth flow is not the Stripe customer ID. Instead, it refers to the "Client ID" of your Stripe Connect application.
+
+When you set up Stripe Connect in your Stripe Dashboard, you'll be provided with a set of API keys specific to your Connect application. One of these keys is the "Client ID." This ID is used to initiate the OAuth flow for connecting other Stripe accounts to your platform.
+- `redirectUri` (required): The URL where Stripe should redirect the user after completing the OAuth flow. Our example shows using an api route that you would create.
+
+Returns:
+
+- A string representing the constructed OAuth URL.
+
+
+### Handle OAuth Callback
+
+Process the OAuth callback by exchanging the authorization code for a connected account ID.
+
+```javascript
+const result = await handleOAuthCallback(authorizationCode);
+const connectedAccountId = result.connectedAccountId;
+```
+
+Parameters:
+
+- `authorizationCode` (required): The authorization code returned by Stripe after the user completes the OAuth flow.
+
+Returns:
+
+- A Promise that resolves to a string containing the ID of the connected Stripe account.
 
 ### Create Payout for Connected Account
 
@@ -287,6 +323,32 @@ Parameters:
 - `amount` (required): The amount to payout, in the smallest currency unit (e.g., cents for USD).
 - `currency` (required): The currency of the payout.
 - `destination` (required): The ID of the connected account to which the payout will be sent.
+
+### Create Account Link
+
+Creates an account link for onboarding or updating a connected account.
+
+```javascript
+const accountLink = await createAccountLink({
+  accountId: 'acct_123456789',
+  refreshUrl: 'https://example.com/reauth',
+  returnUrl: 'https://example.com/return',
+  type: 'account_onboarding'
+});
+```
+
+Parameters:
+
+- `accountId` (required): The ID of the connected account.
+- `refreshUrl` (required): The URL to redirect to if the user's session expires.
+- `returnUrl` (required): The URL to redirect to upon completion.
+- `type` (optional, default `'account_onboarding'`): The type of account link. Possible values are:
+  - `account_onboarding`: Provides a form for inputting outstanding requirements.
+  - `account_update`: Displays the fields that are already populated on the account object and allows editing.
+
+Returns:
+
+- An object representing the created account link, which includes the URL to redirect the user to start the onboarding or update process.
 
 
 ## Subscription Utilities

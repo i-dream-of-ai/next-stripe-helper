@@ -67,7 +67,79 @@ const createPayout = async (options: CreatePayoutOptions): Promise<Stripe.Payout
   }
 }
 
+/**
+ * Handles the OAuth callback by exchanging the authorization code for a connected account ID.
+ *
+ * @param {string} authorizationCode - The authorization code returned by Stripe.
+ * @returns {Promise<string | null>} - A promise that resolves to the connected account ID or null if it doesnt exist.
+ */
+const handleOAuthCallback = async (authorizationCode: string): Promise<string | null> => {
+
+  
+    try {
+      // Exchange the authorization code for an access token and connected account ID
+      const response = await stripe.oauth.token({
+        grant_type: 'authorization_code',
+        code: authorizationCode,
+      });
+  
+      // Return the connected account ID
+      return response.stripe_user_id || null;
+    } catch (error) {
+      handleStripeError(error as Stripe.errors.StripeError);
+    }
+  };
+
+
+/**
+ * Initiates the Stripe OAuth flow.
+ *
+ * @param {string} clientId - Your Stripe client ID.
+ * @param {string} redirectUri - The URL where Stripe should redirect the user after completing the OAuth flow.
+ */
+const startOAuthFlow = (clientId: string, redirectUri: string) => {
+    // Ensure the parameters are provided
+    if (!clientId || !redirectUri) {
+      throw new Error('Both clientId and redirectUri are required.');
+    }
+  
+    // Construct the OAuth URL
+    const oauthURL = new URL('https://connect.stripe.com/oauth/authorize');
+    oauthURL.searchParams.set('response_type', 'code');
+    oauthURL.searchParams.set('client_id', clientId);
+    oauthURL.searchParams.set('scope', 'read_write');
+    oauthURL.searchParams.set('redirect_uri', redirectUri);
+  
+    // Redirect the user to the OAuth URL
+    return oauthURL.toString();
+};
+
+/**
+ * Creates an account link for onboarding or updating a connected account.
+ *
+ * @param {Stripe.AccountLinkCreateParams} options - The options for creating the account link.
+ * @returns {Promise<Stripe.AccountLink>} - A promise that resolves to the created account link.
+ */
+const createAccountLink = async (options: Stripe.AccountLinkCreateParams): Promise<Stripe.AccountLink> => {
+    const { account, refresh_url, return_url, type = 'account_onboarding' } = options;  // Set default value here
+  
+    try {
+      const accountLink = await stripe.accountLinks.create({
+        account,
+        refresh_url,
+        return_url,
+        type,
+      });
+      return accountLink;
+    } catch (error) {
+        handleStripeError(error as Stripe.errors.StripeError);
+    }
+  };
+
 export {
   createConnectedAccount,
   createPayout,
+  startOAuthFlow,
+  handleOAuthCallback,
+  createAccountLink
 };
