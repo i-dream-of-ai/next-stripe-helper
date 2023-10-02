@@ -186,13 +186,17 @@ import { createPortalLink } from 'next-stripe-helper';
 Generate a link for your users to access Stripe's billing portal where they can manage their billing details.
 
 ```javascript
-const portalUrl = await createPortalLink('customer_id', 'https://your-return-url.com');
+const portalUrl = await createPortalLink({customer:'customerId', returnUrl:'https://your-return-url.com'});
 ```
 
 Parameters:
 
 - `customer` (required): The Stripe customer ID.
+- `configuration` (optional): The ID of an existing configuration to use for this session, describing its functionality and features. If not specified, the session uses the default configuration.
+- `flow_data` (optional): Information about a specific flow for the customer to go through. See the stripe docs to learn more about using customer portal deep links and flows.
 - `returnUrl` (required): The URL where the user will be redirected after exiting the billing portal.
+
+For more params see the [stripe docs](https://stripe.com/docs/api/customer_portal/sessions/create).
 
 ## Products and Prices Utilities
 
@@ -235,6 +239,54 @@ Parameters:
 - `metadata` (optional): A key-value store for any additional information you want to store.
 
 Note: The price is set up as recurring, with a monthly interval. If you wish to modify the recurrence, you would need to adjust the utility function accordingly.
+
+
+## Connect Utilities
+
+### Create Connected Account
+
+Create a connected account with Stripe.
+
+```javascript
+const account = await createConnectedAccount({
+    country: 'US',
+    email: 'affiliate@example.com',
+    type: 'express',  // Optional, defaults to 'express'
+    capabilities: {   // Optional, defaults to requesting 'card_payments' and 'transfers'
+        card_payments: { requested: true },
+        transfers: { requested: true },
+    },
+    // ...any other Stripe AccountCreateParams
+});
+```
+
+Parameters:
+
+- `country` (required): The country of the connected account.
+- `email` (required): The email address of the connected account.
+- `type` (optional, default `'express'`): The type of the connected account (`'express'`, `'custom'`, or `'standard'`).
+- `capabilities` (optional, default `{ card_payments: { requested: true }, transfers: { requested: true } }`): The capabilities to request for the connected account.
+- ...any other parameters as per the [Stripe AccountCreateParams documentation](https://stripe.com/docs/api/accounts/create#create_account).
+
+---
+
+### Create Payout for Connected Account
+
+Create a payout to a connected account.
+
+```javascript
+const payout = await createPayout({
+    amount: 1000,  // amount in cents
+    currency: 'usd',
+    destination: 'acct_123456789',  // the ID of the connected account
+});
+```
+
+Parameters:
+
+- `amount` (required): The amount to payout, in the smallest currency unit (e.g., cents for USD).
+- `currency` (required): The currency of the payout.
+- `destination` (required): The ID of the connected account to which the payout will be sent.
 
 
 ## Subscription Utilities
