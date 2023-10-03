@@ -329,9 +329,9 @@ Creates an account link for onboarding or updating a connected account.
 
 ```javascript
 const accountLink = await createAccountLink({
-  accountId: 'acct_123456789',
-  refreshUrl: 'https://example.com/reauth',
-  returnUrl: 'https://example.com/return',
+  account: 'acct_123456789',
+  refresh_url: 'https://example.com/reauth',
+  return_url: 'https://example.com/return',
   type: 'account_onboarding'
 });
 ```
@@ -357,14 +357,12 @@ Creates a Connect Express login link for a connected account.
 ```javascript
 const loginLinkUrl = await createConnectExpressLoginLink(
   'acct_123456789',  // Replace with your users connected account ID
-  'sk_YourStripeSecretKey'  // Replace with your Stripe secret key
 );
 ```
 
 Parameters:
 
 - `accountId` (required): The ID of the connected account.
-- `secretKey` (required): Your Stripe secret key.
 
 Returns:
 
