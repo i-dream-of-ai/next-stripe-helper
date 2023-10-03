@@ -294,8 +294,7 @@ Returns:
 Process the OAuth callback by exchanging the authorization code for a connected account ID.
 
 ```javascript
-const result = await handleOAuthCallback(authorizationCode);
-const connectedAccountId = result.connectedAccountId;
+const connectedAccountId = await handleOAuthCallback(authorizationCode);
 ```
 
 Parameters:
