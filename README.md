@@ -350,6 +350,25 @@ Returns:
 - An object representing the created account link, which includes the URL to redirect the user to start the onboarding or update process.
 
 
+### Retrieve Connect Account
+
+Retrieves a Stripe Connect account.
+
+```javascript
+const account = await retrieveAccount(
+  'acct_123456789'
+);
+```
+
+Parameters:
+
+- `accountId` (required): The ID of the connected account.
+
+Returns:
+
+- An object representing the retrieved Stripe Connect account.
+
+
 ### Create Connect Express Login Link
 
 Creates a Connect Express login link for a connected account.

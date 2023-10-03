@@ -138,6 +138,23 @@ const createAccountLink = async (options: Stripe.AccountLinkCreateParams): Promi
 
 
 /**
+ * Retrieves a Stripe Connect account.
+ *
+ * @param {string} accountId - The ID of the connected account.
+ * @returns {Promise<Stripe.Account>} - A promise that resolves to the retrieved account.
+ * @throws {Error} - If there's an error during the request.
+ */
+const retrieveAccount = async (accountId: string): Promise<Stripe.Account> => {
+  try {
+    const account = await stripe.accounts.retrieve(accountId);
+    return account;
+  } catch (error) {
+    handleStripeError(error as Stripe.errors.StripeError);
+  }
+};
+
+
+/**
  * Creates a Connect Express login link for a connected account.
  *
  * @param {string} accountId - The ID of the connected account.
@@ -162,5 +179,6 @@ export {
   startOAuthFlow,
   handleOAuthCallback,
   createAccountLink,
+  retrieveAccount,
   createConnectExpressLoginLink
 };
