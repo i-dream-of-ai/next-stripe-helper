@@ -5,3 +5,4 @@ export * from './portal';
 export * from './prices';
 export * from './subscriptions';
 export * from './webhooks';
+export * from './connect';
