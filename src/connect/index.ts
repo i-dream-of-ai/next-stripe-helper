@@ -134,12 +134,45 @@ const createAccountLink = async (options: Stripe.AccountLinkCreateParams): Promi
     } catch (error) {
         handleStripeError(error as Stripe.errors.StripeError);
     }
-  };
+};
+
+
+/**
+ * Creates a Connect Express login link for a connected account.
+ *
+ * @param {string} accountId - The ID of the connected account.
+ * @param {string} secretKey - Your Stripe secret key.
+ * @returns {Promise<string>} - A promise that resolves to the created login link URL.
+ * @throws {Error} - If there's an error during the request.
+ */
+const createConnectExpressLoginLink = async (accountId: string, secretKey: string): Promise<string> => {
+    const endpoint = `https://api.stripe.com/v1/accounts/${accountId}/login_links`;
+  
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${secretKey}`,
+          //'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to create login link: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+        handleStripeError(error as Stripe.errors.StripeError);
+    }
+};
 
 export {
   createConnectedAccount,
   createPayout,
   startOAuthFlow,
   handleOAuthCallback,
-  createAccountLink
+  createAccountLink,
+  createConnectExpressLoginLink
 };

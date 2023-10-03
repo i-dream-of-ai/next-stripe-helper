@@ -351,6 +351,28 @@ Returns:
 - An object representing the created account link, which includes the URL to redirect the user to start the onboarding or update process.
 
 
+### Create Connect Express Login Link
+
+Creates a Connect Express login link for a connected account.
+
+```javascript
+const loginLinkUrl = await createConnectExpressLoginLink(
+  'acct_123456789',  // Replace with your users connected account ID
+  'sk_YourStripeSecretKey'  // Replace with your Stripe secret key
+);
+```
+
+Parameters:
+
+- `accountId` (required): The ID of the connected account.
+- `secretKey` (required): Your Stripe secret key.
+
+Returns:
+
+- A string representing the created login link URL.
+
+
+
 ## Subscription Utilities
 
 The `next-stripe-helper` package offers a suite of utilities designed to streamline interactions with Stripe subscriptions.
