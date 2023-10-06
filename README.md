@@ -198,6 +198,124 @@ Parameters:
 
 For more params see the [stripe docs](https://stripe.com/docs/api/customer_portal/sessions/create).
 
+
+## Stripe Accounts
+
+### Create a Stripe Account
+
+Create a new account on Stripe.
+
+```javascript
+import { createAccount } from 'next-stripe-helper';
+
+const params = {
+  type: 'custom', // or 'standard', 'express'
+  country: 'US',
+  email: 'user@example.com',
+  // Add other Stripe.AccountCreateParams properties as needed
+};
+
+const account = await createAccount(params);
+```
+
+#### Parameters:
+
+- `params`: An object containing parameters for creating the account. Common properties include:
+  - `type`: The type of account to create (`custom`, `standard`, or `express`).
+  - `country`: The country in which the account holder resides.
+  - `email`: The email address of the account holder.
+  - Refer to the [Stripe API documentation](https://stripe.com/docs/api/accounts/create) for a full list of parameters.
+
+#### Returns:
+
+- A promise that resolves with the created account.
+
+### Get Account
+
+Retrieve details of a Stripe account.
+
+```javascript
+import { getAccount } from 'next-stripe-helper';
+
+const accountId = 'acct_1234567890';
+
+try {
+  const account = await getAccount(accountId);
+  console.log(account);
+} catch (error) {
+  console.error("Error:", error);
+}
+```
+
+#### Parameters:
+
+- `accountId`: The ID of the Stripe account you want to retrieve.
+
+#### Returns:
+
+- A promise that resolves with the details of the Stripe account.
+
+---
+
+### Update Account
+
+Update details of a Stripe account.
+
+```javascript
+import { updateAccount } from 'next-stripe-helper';
+
+const accountId = 'acct_1234567890';
+const params = {
+  email: 'new-email@example.com',
+  // Add other Stripe.AccountUpdateParams properties as needed
+};
+
+try {
+  const account = await updateAccount(accountId, params);
+  console.log(account);
+} catch (error) {
+  console.error("Error:", error);
+}
+```
+
+#### Parameters:
+
+- `accountId`: The ID of the Stripe account you want to update.
+- `params`: An object containing the properties you want to update on the Stripe account.
+
+#### Returns:
+
+- A promise that resolves with the updated details of the Stripe account.
+
+---
+
+### Delete Account
+
+Delete a Stripe account.
+
+```javascript
+import { deleteAccount } from 'next-stripe-helper';
+
+const accountId = 'acct_1234567890';
+
+try {
+  const account = await deleteAccount(accountId);
+  console.log(account);
+} catch (error) {
+  console.error("Error:", error);
+}
+```
+
+#### Parameters:
+
+- `accountId`: The ID of the Stripe account you want to delete.
+
+#### Returns:
+
+- A promise that resolves with the details of the deleted Stripe account.
+
+
+
 ## Products and Prices Utilities
 
 The `next-stripe-helper` provides utilities to help with the creation of products and their associated prices on Stripe.
@@ -409,7 +527,6 @@ const deletedAccount = await deleteExpressAccount(accountId);
 - A promise that resolves with the deleted account object. If the deletion was successful, the object will have a `deleted` property set to `true`.
 
 > ⚠️ **Warning**: Deleting an account is irreversible. Ensure you've backed up any necessary data and are certain about the deletion before proceeding.
-
 
 
 ### List All Transfers

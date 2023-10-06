@@ -6,3 +6,4 @@ export * from './prices';
 export * from './subscriptions';
 export * from './webhooks';
 export * from './connect';
+export * from './account';
