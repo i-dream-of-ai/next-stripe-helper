@@ -42,6 +42,22 @@ interface CustomAccountCreateParams extends Stripe.AccountCreateParams {
 }
 
 /**
+ * Deleted a Stripe Express account.
+ *
+ * @param {string} accountId - The ID of the connected account.
+ * @returns {Promise<Stripe.Account>} - A promise that resolves to the deleted account.
+ * @throws {Error} - If there's an error during the request.
+ */
+async function deleteExpressAccount(accountId:string): Promise<Stripe.DeletedAccount> {
+  try {
+    return await stripe.accounts.del(accountId);
+  } catch (error) {
+    console.error("Error deleting the account:", error);
+    throw error;
+  }
+}
+
+/**
  * Create a payout to a connected account.
  * 
  * @param {Object} options - The options for creating the payout.
@@ -158,7 +174,6 @@ const retrieveAccount = async (accountId: string): Promise<Stripe.Account> => {
  * Creates a Connect Express login link for a connected account.
  *
  * @param {string} accountId - The ID of the connected account.
- * @param {string} secretKey - Your Stripe secret key.
  * @returns {Promise<string>} - A promise that resolves to the created login link URL.
  * @throws {Error} - If there's an error during the request.
  */
@@ -195,6 +210,7 @@ async function listAllTransfers(
 
 export {
   createConnectedAccount,
+  deleteExpressAccount,
   createPayout,
   startOAuthFlow,
   handleOAuthCallback,

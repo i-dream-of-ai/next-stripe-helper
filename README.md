@@ -388,6 +388,30 @@ Returns:
 - A string representing the created login link URL.
 
 
+### Delete a Stripe Express Account
+
+Delete a specific Stripe Express account using its account ID.
+
+```javascript
+import { deleteExpressAccount } from 'your-package-name';
+
+const accountId = 'acct_1234567890'; // Replace with the ID of the account you want to delete
+
+const deletedAccount = await deleteExpressAccount(accountId);
+```
+
+#### Parameters:
+
+- `accountId`: The ID of the Stripe Express account you want to delete.
+
+#### Returns:
+
+- A promise that resolves with the deleted account object. If the deletion was successful, the object will have a `deleted` property set to `true`.
+
+> ⚠️ **Warning**: Deleting an account is irreversible. Ensure you've backed up any necessary data and are certain about the deletion before proceeding.
+
+
+
 ### List All Transfers
 
 Retrieve a list of all transfers made on your Stripe Connect account.
