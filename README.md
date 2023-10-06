@@ -388,6 +388,38 @@ Returns:
 - A string representing the created login link URL.
 
 
+### List All Transfers
+
+Retrieve a list of all transfers made on your Stripe Connect account.
+
+```javascript
+import { listAllTransfers } from 'next-stripe-helper';
+
+const params = {
+  destination: 'acc_1234567', //Optional:  Only return transfers to this account ID. 
+  limit: 10, // Optional: Number of transfers to retrieve. Max value is 100.
+  // Add other Stripe.TransferListParams properties as needed
+};
+
+const transfers = await listAllTransfers(params);
+```
+
+#### Parameters:
+
+- `params` (optional): An object containing parameters to filter the list of transfers. Some of the commonly used properties include:
+  - `limit`: A limit on the number of objects to be returned. Limit can range between 1 and 100 items.
+  - `status`: The status of the transfers to retrieve. Can be `pending`, `paid`, `failed`, or `reversed`.
+  - `created`: A filter on the list based on the object `created` field. The value can be a string with an integer Unix timestamp, or it can be a dictionary with the following options:
+    - `gt`: Return results with a `created` value greater than this timestamp.
+    - `gte`: Return results with a `created` value greater than or equal to this timestamp.
+    - `lt`: Return results with a `created` value less than this timestamp.
+    - `lte`: Return results with a `created` value less than or equal to this timestamp.
+  - Refer to the [Stripe API documentation](https://stripe.com/docs/api/transfers/list) for a full list of parameters.
+
+#### Returns:
+
+- A promise that resolves with a list of transfers. Each transfer object contains details about the transfer, such as the amount, currency, status, and more.
+
 
 ## Subscription Utilities
 

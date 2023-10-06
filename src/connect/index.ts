@@ -173,6 +173,26 @@ const createConnectExpressLoginLink = async (accountId: string): Promise<string>
     }
 };
 
+/**
+ * Lists all transfers for a Stripe Connect account.
+ *
+ * @param {Stripe.TransferListParams} [params] - Parameters to filter the list of transfers.
+ * @returns {Promise<Stripe.ApiListPromise<Stripe.Transfer>>} A promise that resolves with the list of transfers.
+ */
+async function listAllTransfers(
+  params?: Stripe.TransferListParams
+): Promise<Stripe.ApiListPromise<Stripe.Transfer>> {
+  try {
+    const transfers = await stripe.transfers.list(
+      params
+    );
+    return transfers;
+  } catch (error) {
+    console.error("Error listing transfers:", error);
+    throw error;
+  }
+}
+
 export {
   createConnectedAccount,
   createPayout,
@@ -180,5 +200,6 @@ export {
   handleOAuthCallback,
   createAccountLink,
   retrieveAccount,
-  createConnectExpressLoginLink
+  createConnectExpressLoginLink,
+  listAllTransfers
 };
