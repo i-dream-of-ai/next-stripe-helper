@@ -2,6 +2,22 @@ import { Stripe } from 'stripe';
 import { handleStripeError, stripe } from '../utils/stripe';
 
 /**
+ * Lists Stripe accounts.
+ *
+ * @param {Stripe.AccountCreateParams} params - Parameters for listing the account.
+ * @returns {Promise<Stripe.ApiList>} A promise that resolves with the list of accounts.
+ */
+async function listAccounts(params: Stripe.AccountListParams){
+  try {
+    const accounts = await stripe.accounts.list(params);
+    return accounts;
+  } catch (error) {
+    console.error("Error list the accounts:", error);
+    handleStripeError(error as Stripe.errors.StripeError);
+  }
+}
+
+/**
  * Creates a new Stripe account.
  *
  * @param {Stripe.AccountCreateParams} params - Parameters for creating the account.
@@ -54,7 +70,7 @@ async function updateAccount(accountId: string, params: Stripe.AccountUpdatePara
  * Deletes a Stripe account.
  *
  * @param {string} accountId - The ID of the account to delete.
- * @returns {Promise<Stripe.Account>} A promise that resolves with the deleted account.
+ * @returns {Promise<Stripe.DeletedAccount>} A promise that resolves with the deleted account.
  */
 async function deleteAccount(accountId: string): Promise<Stripe.DeletedAccount> {
     try {
@@ -67,6 +83,7 @@ async function deleteAccount(accountId: string): Promise<Stripe.DeletedAccount> 
 }
 
 export {
+    listAccounts,
     createAccount,
     getAccount,
     updateAccount,
