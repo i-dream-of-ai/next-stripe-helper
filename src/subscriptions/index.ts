@@ -11,12 +11,21 @@ interface UserSubscriptionDetails {
  * 
  * @param {string} customerId - The ID of the customer.
  * @param {string} priceId - The ID of the price (related to a product) to which the customer is subscribing.
+ * @param {number} trial_period_days - The number of days for the trial period.
+ * @param {Object} trial_settings - Settings related to subscription trials. This object should have an 'end_behavior' property that specifies how the subscription should behave when the trial ends, and a 'missing_payment_method' property that indicates how the subscription should change if no payment method is provided by the end of the trial.
  * @returns {Promise<Stripe.Subscription>} - The newly created subscription object.
  */
-async function createSubscription(customerId: string, priceId: string): Promise<Stripe.Subscription> {
+async function createSubscription(
+  customerId: string, 
+  priceId: string, 
+  trial_period_days: number,
+  trial_settings: { end_behavior: { missing_payment_method: 'cancel' | 'pause' | 'create_invoice' } }
+): Promise<Stripe.Subscription> {
     return await stripe.subscriptions.create({
         customer: customerId,
-        items: [{ price: priceId }]
+        items: [{ price: priceId }],
+        trial_period_days: trial_period_days,
+        trial_settings: trial_settings
     });
 }
 
